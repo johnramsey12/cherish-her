@@ -1,0 +1,94 @@
+{
+  "expo": {
+    "name": "Cherish Her",
+    "slug": "cherish-her",
+    "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "primaryColor": "#C8956A",
+    "backgroundColor": "#0D0C0D",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0C0D"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.cherishher.app",
+      "buildNumber": "1",
+      "requireFullScreen": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Cherish Her uses your location to suggest nearby restaurants and date activities.",
+        "NSUserNotificationsUsageDescription": "Cherish Her sends reminders for her birthday, your anniversary, and date night ideas.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPrivacyAccessedAPITypeReasons": {
+          "NSPrivacyAccessedAPICategoryUserDefaults": [
+            "CA92.1"
+          ],
+          "NSPrivacyAccessedAPICategoryFileTimestamp": [
+            "C617.1"
+          ]
+        }
+      },
+      "usesAppleSignIn": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D0C0D"
+      },
+      "package": "com.cherishher.app",
+      "versionCode": 1,
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#C8956A",
+          "sounds": []
+        }
+      ],
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "anthropicApiKey": "",
+      "eas": {
+        "projectId": "f84850c9-d00f-4b69-bfe3-20e7de0bf24b"
+      }
+    },
+    "owner": "jramdev",
+    "updates": {
+      "url": "https://u.expo.dev/REPLACE_WITH_YOUR_EAS_PROJECT_ID",
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
+    }
+  }
+}
