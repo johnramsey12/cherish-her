@@ -5,12 +5,13 @@ import {
   StyleSheet,
   SafeAreaView,
   Text,
+  TextInput,
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import { colors, typography, spacing } from '../constants/theme';
+import { colors, typography, spacing, radius } from '../constants/theme';
 import { ScoredProduct, OccasionTag, SortOption } from '../types';
-import { useProfileStore, useGiftPrefsStore, useSurveyStore } from '../stores';
+import { useProfileStore, useGiftPrefsStore, useSurveyStore, useGiftStore } from '../stores';
 import { ProductCard } from '../components/gifts/ProductCard';
 import { ProductDetailModal } from '../components/gifts/ProductDetailModal';
 import { FilterBar, PriceRange } from '../components/gifts/FilterBar';
@@ -18,7 +19,7 @@ import { LoadingView, EmptyState, ScreenHeader } from '../components/common/inde
 import { GiftSurvey } from '../components/surveys/GiftSurveySteps';
 import { fetchGifts, logEvent, ServerProduct } from '../services/api';
 
-function serverProductToScored(p: ServerProduct): ScoredProduct {  // @ts-ignore
+function serverProductToScored(p: ServerProduct): ScoredProduct {
   return {
     id:              p.id,
     name:            p.name,
@@ -36,29 +37,31 @@ function serverProductToScored(p: ServerProduct): ScoredProduct {  // @ts-ignore
     popularityScore: p.popularityScore,
     styleTags:       p.styleTags as any,
     occasionTags:    p.occasionTags as any,
-  };
+  } as unknown as ScoredProduct;
 }
 
 export const GiftsScreen: React.FC = () => {
-  const { profile }                       = useProfileStore();
-  const { giftPrefs }                     = useGiftPrefsStore();
-  const { surveyState }                   = useSurveyStore();
+  const { profile }       = useProfileStore();
+  const { giftPrefs }     = useGiftPrefsStore();
+  const { surveyState }   = useSurveyStore();
+  const { savedProducts } = useGiftStore();
 
-  const [products, setProducts]           = useState<ScoredProduct[]>([]);
-  const [isLoading, setIsLoading]         = useState(false);
-  const [isRefreshing, setIsRefreshing]   = useState(false);
-  const [hasLoaded, setHasLoaded]         = useState(false);
-  const [selectedOccasion, setSelectedOccasion] = useState<OccasionTag | undefined>(undefined);
+  const [products, setProducts]                   = useState<ScoredProduct[]>([]);
+  const [isLoading, setIsLoading]                 = useState(false);
+  const [isRefreshing, setIsRefreshing]           = useState(false);
+  const [hasLoaded, setHasLoaded]                 = useState(false);
+  const [selectedOccasion, setSelectedOccasion]   = useState<OccasionTag | undefined>(undefined);
   const [selectedPriceRange, setSelectedPriceRange] = useState<PriceRange | undefined>(undefined);
-  const [sort, setSort]                   = useState<SortOption>('relevant' as any);
-  const [selectedProduct, setSelectedProduct] = useState<ScoredProduct | null>(null);
-  const [detailVisible, setDetailVisible] = useState(false);
-  const [surveyVisible, setSurveyVisible] = useState(false);
+  const [sort, setSort]                           = useState<SortOption>('relevant' as any);
+  const [selectedProduct, setSelectedProduct]     = useState<ScoredProduct | null>(null);
+  const [detailVisible, setDetailVisible]         = useState(false);
+  const [surveyVisible, setSurveyVisible]         = useState(false);
+  const [searchQuery, setSearchQuery]             = useState('');
+  const [showSaved, setShowSaved]                 = useState(false);
 
   const loadProducts = useCallback(async (refreshing = false) => {
     if (refreshing) setIsRefreshing(true);
     else setIsLoading(true);
-
     try {
       const resp = await fetchGifts({
         styleTags:    profile?.stylePreferences ?? [],
@@ -85,17 +88,9 @@ export const GiftsScreen: React.FC = () => {
     }
   }, [profile, selectedOccasion, selectedPriceRange, sort]);
 
-  // Initial load
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  useEffect(() => { loadProducts(); }, []);
+  useEffect(() => { if (hasLoaded) loadProducts(); }, [selectedOccasion, selectedPriceRange, sort]);
 
-  // Reload when filters change
-  useEffect(() => {
-    if (hasLoaded) loadProducts();
-  }, [selectedOccasion, selectedPriceRange, sort]);
-
-  // Show gift survey if not completed
   useEffect(() => {
     if (!surveyState.giftCompleted && surveyState.profileCompleted) {
       const timer = setTimeout(() => setSurveyVisible(true), 400);
@@ -103,21 +98,20 @@ export const GiftsScreen: React.FC = () => {
     }
   }, [surveyState.giftCompleted, surveyState.profileCompleted]);
 
-  const handleOccasionChange = useCallback((occasion?: OccasionTag) => {
-    setSelectedOccasion(occasion);
-  }, []);
+  const displayProducts = products.filter(p => {
+    const q = searchQuery.toLowerCase();
+    const name = p.name.toLowerCase();
+    const brand = ((p.brand) ?? '').toLowerCase();
+    const merchant = p.merchantName.toLowerCase();
+    const matchesSearch = q === '' || name.includes(q) || brand.includes(q) || merchant.includes(q);
+    const matchesSaved = !showSaved || savedProducts.includes(p.id);
+    return matchesSearch && matchesSaved;
+  });
 
-  const handlePriceRangeChange = useCallback((range?: PriceRange) => {
-    setSelectedPriceRange(range);
-  }, []);
-
-  const handleSortChange = useCallback((newSort: SortOption) => {
-    setSort(newSort);
-  }, []);
-
-  const handleRefresh = useCallback(() => {
-    loadProducts(true);
-  }, [loadProducts]);
+  const handleOccasionChange   = useCallback((o?: OccasionTag) => setSelectedOccasion(o), []);
+  const handlePriceRangeChange = useCallback((r?: PriceRange) => setSelectedPriceRange(r), []);
+  const handleSortChange       = useCallback((s: SortOption) => setSort(s), []);
+  const handleRefresh          = useCallback(() => loadProducts(true), [loadProducts]);
 
   const handleProductPress = useCallback((product: ScoredProduct) => {
     setSelectedProduct(product);
@@ -127,7 +121,6 @@ export const GiftsScreen: React.FC = () => {
       productId:    product.id,
       styleTags:    profile?.stylePreferences ?? [],
       occasionTags: selectedOccasion ? [selectedOccasion] : [],
-      interestTags: profile?.interests ?? [],
       occasion:     selectedOccasion,
       priceRange:   selectedPriceRange?.label,
     });
@@ -135,28 +128,41 @@ export const GiftsScreen: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item }: { item: ScoredProduct }) => (
-      <ProductCard
-        product={item}
-        onPress={() => handleProductPress(item)}
-      />
+      <ProductCard product={item} onPress={() => handleProductPress(item)} />
     ),
     [handleProductPress],
   );
 
-  if (isLoading && !hasLoaded) {
-    return <LoadingView message="Finding perfect gifts…" />;
-  }
+  if (isLoading && !hasLoaded) return <LoadingView message="Finding perfect gifts..." />;
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScreenHeader
         title="Gift Ideas"
-        subtitle={
-          products.length > 0
-            ? `${products.length} recommendations for her`
-            : undefined
+        subtitle={displayProducts.length > 0 ? displayProducts.length + " recommendations for her" : undefined}
+        rightElement={
+          <TouchableOpacity
+            style={[styles.savedBtn, showSaved && styles.savedBtnActive]}
+            onPress={() => setShowSaved(s => !s)}
+          >
+            <Text style={[styles.savedBtnText, showSaved && styles.savedBtnTextActive]}>
+              {showSaved ? "Saved" : "Saved"}
+            </Text>
+          </TouchableOpacity>
         }
       />
+
+      <View style={styles.searchRow}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search gifts, brands..."
+          placeholderTextColor={colors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+      </View>
 
       <FilterBar
         selectedOccasion={selectedOccasion}
@@ -167,15 +173,15 @@ export const GiftsScreen: React.FC = () => {
         onSortChange={handleSortChange}
       />
 
-      {products.length === 0 && !isLoading ? (
+      {displayProducts.length === 0 && !isLoading ? (
         <EmptyState
           icon="🎁"
-          title="No gifts found"
-          subtitle="Try adjusting the filters or pull down to refresh."
+          title={showSaved ? "No saved gifts yet" : "No gifts found"}
+          subtitle={showSaved ? "Tap the heart on any gift to save it." : "Try adjusting the filters or pull down to refresh."}
         />
       ) : (
         <FlatList
-          data={products}
+          data={displayProducts}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           numColumns={2}
@@ -195,32 +201,50 @@ export const GiftsScreen: React.FC = () => {
       <ProductDetailModal
         product={selectedProduct}
         visible={detailVisible}
-        onClose={() => {
-          setDetailVisible(false);
-          setSelectedProduct(null);
-        }}
+        onClose={() => { setDetailVisible(false); setSelectedProduct(null); }}
       />
 
       <GiftSurvey
         visible={surveyVisible}
         onClose={() => setSurveyVisible(false)}
-        onComplete={() => {
-          setSurveyVisible(false);
-          loadProducts(true);
-        }}
+        onComplete={() => { setSurveyVisible(false); loadProducts(true); }}
       />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  columnWrapper: {
+  safe:            { flex: 1, backgroundColor: colors.background },
+  columnWrapper:   { paddingHorizontal: spacing.base, gap: spacing.sm },
+  listContent:     { paddingTop: spacing.md, paddingBottom: spacing["3xl"] },
+  searchRow: {
     paddingHorizontal: spacing.base,
-    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 0.5,
+    borderBottomColor: colors.border,
   },
-  listContent: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing['3xl'],
+  searchInput: {
+    height: 40,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    color: colors.textPrimary,
+    fontSize: 14,
   },
+  savedBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 0.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  savedBtnActive: {
+    backgroundColor: colors.roseMuted,
+    borderColor: colors.primary,
+  },
+  savedBtnText:       { fontSize: 12, color: colors.textSecondary },
+  savedBtnTextActive: { color: colors.primary, fontWeight: "500" },
 });
