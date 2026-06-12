@@ -1,199 +1,94 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from 'react-native';
-import { colors, typography, spacing, radius } from '../../constants/theme';
-import { OccasionTag, SortOption } from '../../types';
-import { occasionLabels } from '../../constants/theme';
+import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { colors, spacing } from '../../constants/theme';
+import type { OccasionTag } from '../../types';
 
-const OCCASIONS: OccasionTag[] = [
-  'birthday', 'anniversary', 'christmas', 'valentines',
-  'mothers_day', 'graduation', 'wedding', 'just_because', 'apology',
-];
-
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'relevant',   label: 'Most Relevant' },
-  { value: 'price_asc',  label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
-  { value: 'trending',   label: 'Trending' },
-  { value: 'newest',     label: 'Newest' },
-  { value: 'luxury',     label: 'Luxury' },
-  { value: 'budget',     label: 'Budget Friendly' },
-];
-
-interface FilterBarProps {
-  selectedOccasion?: OccasionTag;
-  selectedSort: SortOption;
-  onOccasionChange: (occasion?: OccasionTag) => void;
-  onSortChange: (sort: SortOption) => void;
+export interface PriceRange {
+  label: string;
+  min: number;
+  max: number;
 }
 
-export const FilterBar: React.FC<FilterBarProps> = ({
-  selectedOccasion,
-  selectedSort,
-  onOccasionChange,
-  onSortChange,
-}) => {
-  const [showSortSheet, setShowSortSheet] = React.useState(false);
+export const PRICE_RANGES: PriceRange[] = [
+  { label: 'Under $50',   min: 0, max: 50    },
+  { label: 'Under $100',  min: 0, max: 100   },
+  { label: 'Under $200',  min: 0, max: 200   },
+  { label: 'Under $500',  min: 0, max: 500   },
+  { label: 'Under $1000', min: 0, max: 1000  },
+  { label: 'Under $2500', min: 0, max: 2500  },
+  { label: 'No limit',    min: 0, max: 99999 },
+];
 
+const OCCASIONS = [
+  { label: 'Birthday',     value: 'birthday'     },
+  { label: 'Anniversary',  value: 'anniversary'  },
+  { label: 'Valentines',   value: 'valentines'   },
+  { label: 'Mothers Day',  value: 'mothers_day'  },
+  { label: 'Graduation',   value: 'graduation'   },
+  { label: 'Christmas',    value: 'christmas'    },
+  { label: 'Just Because', value: 'just_because' },
+];
+
+export interface FilterBarProps {
+  selectedOccasion:    OccasionTag | undefined;
+  selectedPriceRange?: PriceRange  | undefined;
+  selectedSort?:       any;
+  onOccasionChange:    (occasion: OccasionTag | undefined) => void;
+  onPriceRangeChange?: (range: PriceRange | undefined) => void;
+  onSortChange?:       (sort: any) => void;
+}
+
+export function FilterBar({ selectedOccasion, selectedPriceRange, onOccasionChange, onPriceRangeChange }: FilterBarProps) {
   return (
     <View style={styles.wrapper}>
-      {/* Occasion chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipRow}
-      >
-        {/* "All" chip */}
-        <TouchableOpacity
-          style={[styles.chip, !selectedOccasion && styles.chipActive]}
-          onPress={() => onOccasionChange(undefined)}
-        >
-          <Text style={[styles.chipText, !selectedOccasion && styles.chipTextActive]}>
-            All
-          </Text>
-        </TouchableOpacity>
-
-        {OCCASIONS.map((occ) => {
-          const active = selectedOccasion === occ;
+      <View style={styles.rowHeader}>
+        <Text style={styles.rowLabel}>Budget</Text>
+        {selectedPriceRange && (
+          <TouchableOpacity onPress={() => onPriceRangeChange?.(undefined)}>
+            <Text style={styles.clearText}>Clear</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {PRICE_RANGES.map((range) => {
+          const active = selectedPriceRange?.label === range.label;
           return (
-            <TouchableOpacity
-              key={occ}
-              style={[styles.chip, active && styles.chipActive]}
-              onPress={() => onOccasionChange(active ? undefined : occ)}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {occasionLabels[occ]}
-              </Text>
+            <TouchableOpacity key={range.label} style={[styles.chip, active && styles.chipActive]} onPress={() => onPriceRangeChange?.(active ? undefined : range)} activeOpacity={0.7}>
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>{range.label}</Text>
             </TouchableOpacity>
           );
         })}
       </ScrollView>
-
-      {/* Sort button */}
-      <View style={styles.sortRow}>
-        <TouchableOpacity
-          style={styles.sortBtn}
-          onPress={() => setShowSortSheet(!showSortSheet)}
-        >
-          <Text style={styles.sortIcon}>⇅</Text>
-          <Text style={styles.sortLabel}>
-            {SORT_OPTIONS.find((s) => s.value === selectedSort)?.label ?? 'Sort'}
-          </Text>
-        </TouchableOpacity>
+      <View style={[styles.rowHeader, { marginTop: 8 }]}>
+        <Text style={styles.rowLabel}>Occasion</Text>
+        {selectedOccasion && (
+          <TouchableOpacity onPress={() => onOccasionChange(undefined)}>
+            <Text style={styles.clearText}>Clear</Text>
+          </TouchableOpacity>
+        )}
       </View>
-
-      {/* Sort sheet */}
-      {showSortSheet && (
-        <View style={styles.sortSheet}>
-          {SORT_OPTIONS.map((opt) => {
-            const active = selectedSort === opt.value;
-            return (
-              <TouchableOpacity
-                key={opt.value}
-                style={[styles.sortOption, active && styles.sortOptionActive]}
-                onPress={() => {
-                  onSortChange(opt.value);
-                  setShowSortSheet(false);
-                }}
-              >
-                <Text style={[styles.sortOptionText, active && styles.sortOptionTextActive]}>
-                  {opt.label}
-                </Text>
-                {active && <Text style={styles.checkmark}>✓</Text>}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {OCCASIONS.map(({ label, value }) => {
+          const active = selectedOccasion === value;
+          return (
+            <TouchableOpacity key={value} style={[styles.chip, active && styles.chipActive]} onPress={() => onOccasionChange(active ? undefined : value as OccasionTag)} activeOpacity={0.7}>
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  wrapper: {
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  chipRow: {
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-    flexDirection: 'row',
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: radius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipActive: {
-    backgroundColor: colors.primaryMuted,
-    borderColor: colors.primary,
-  },
-  chipText: {
-    fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-  },
-  chipTextActive: {
-    color: colors.primary,
-    fontFamily: typography.fonts.bodyMedium,
-  },
-  sortRow: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: spacing.sm,
-  },
-  sortBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-  },
-  sortIcon: {
-    fontSize: 14,
-    color: colors.textTertiary,
-  },
-  sortLabel: {
-    fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  sortSheet: {
-    backgroundColor: colors.surfaceElevated,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  sortOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  sortOptionActive: {
-    backgroundColor: colors.primaryMuted,
-  },
-  sortOptionText: {
-    fontFamily: typography.fonts.body,
-    fontSize: typography.sizes.base,
-    color: colors.textPrimary,
-  },
-  sortOptionTextActive: {
-    color: colors.primary,
-    fontFamily: typography.fonts.bodyMedium,
-  },
-  checkmark: {
-    color: colors.primary,
-    fontSize: 16,
-  },
+  wrapper: { paddingVertical: 8, backgroundColor: colors.background, borderBottomWidth: 0.5, borderBottomColor: colors.border },
+  rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, marginBottom: 6 },
+  rowLabel: { color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, fontSize: 10 },
+  clearText: { color: colors.primary, fontSize: 12 },
+  scrollContent: { paddingHorizontal: 16, gap: 8, flexDirection: 'row' },
+  chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 0.5, borderColor: colors.border, backgroundColor: colors.backgroundSecondary },
+  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipText: { color: colors.textSecondary, fontSize: 13 },
+  chipTextActive: { color: colors.background, fontWeight: '500' },
 });

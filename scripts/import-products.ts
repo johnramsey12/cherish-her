@@ -2,24 +2,28 @@
 /**
  * import-products.ts
  * Reads CSV/JSON/XML files from the imports/ folder, normalizes them,
- * AI-tags each product with Claude, and writes src/data/products.generated.ts
+ * AI-tags each product with Claude, writes src/data/products.generated.ts,
+ * and pushes all products to the Cherish Her server.
  *
  * Usage:
- *   npx ts-node scripts/import-products.ts              (rule-based tags)
- *   npx ts-node scripts/import-products.ts --ai         (Claude AI tags)
- *   npx ts-node scripts/import-products.ts --dry-run    (preview only)
+ *   npx tsx scripts/import-products.ts              (rule-based tags)
+ *   npx tsx scripts/import-products.ts --ai         (Claude AI tags)
+ *   npx tsx scripts/import-products.ts --dry-run    (preview only)
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse as parseCsv } from 'csv-parse/sync';
 import { XMLParser } from 'fast-xml-parser';
+import 'dotenv/config';
 
-const USE_AI  = process.argv.includes('--ai');
-const DRY_RUN = process.argv.includes('--dry-run');
+const USE_AI      = process.argv.includes('--ai');
+const DRY_RUN     = process.argv.includes('--dry-run');
 const IMPORTS_DIR = path.join(__dirname, '..', 'imports');
 const OUTPUT_FILE = path.join(__dirname, '..', 'src', 'data', 'products.generated.ts');
-const AI_KEY = process.env.ANTHROPIC_API_KEY ?? '';
+const AI_KEY      = process.env.ANTHROPIC_API_KEY ?? '';
+const SERVER_URL  = process.env.SERVER_URL ?? '';
+const API_KEY     = process.env.IMPORT_API_KEY ?? '';
 
 interface RawProduct { [key: string]: string | number | undefined }
 
@@ -72,7 +76,7 @@ function detectCategory(name: string, cat: string, desc: string): string {
   if (/book|novel|memoir|cookbook|journal|planner|diary/.test(t)) return 'books';
   if (/fitness|gym|yoga mat|workout|activewear|sports bra|running|bicycle|weights/.test(t)) return 'fitness';
   if (/wine|chocolate|coffee|tea|gin|whiskey|champagne|food|snack|gourmet|cheese/.test(t)) return 'food_drink';
-  if (/vase|frame|pillow|blanket|throw|lamp|wall art|planter|home decor|candle/.test(t)) return 'home_decor';
+  if (/vase|frame|pillow|blanket|throw|lamp|wall art|planter|home decor/.test(t)) return 'home_decor';
   if (/flower|bouquet|plant|succulent|orchid|rose|tulip/.test(t)) return 'flowers_plants';
   if (/personalized|custom|engraved|monogram|initial|bespoke/.test(t)) return 'personalized';
   if (/experience|class|lesson|workshop|tour|ticket|membership|subscription/.test(t)) return 'experiences';
@@ -245,9 +249,51 @@ Return ONLY a JSON array with one object per product:
   }
 }
 
+async function pushToServer(products: any[]) {
+  if (!SERVER_URL || !API_KEY) {
+    console.log('\n⚠️  SERVER_URL or IMPORT_API_KEY not set — skipping server push');
+    return;
+  }
+  console.log(`\n🚀 Pushing ${products.length} products to server...`);
+  const BATCH = 50;
+  let totalCreated = 0;
+  let totalUpdated = 0;
+
+  for (let i = 0; i < products.length; i += BATCH) {
+    const batch = products.slice(i, i + BATCH);
+    try {
+      const res = await fetch(`${SERVER_URL}/api/gifts/import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
+        },
+        body: JSON.stringify({ products: batch }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        console.error(`\n  ❌ Server error (batch ${i / BATCH + 1}): ${err}`);
+        continue;
+      }
+
+      const data = await res.json() as { created: number; updated: number };
+      totalCreated += data.created ?? 0;
+      totalUpdated += data.updated ?? 0;
+      process.stdout.write(`\r   ${Math.min(i + BATCH, products.length)}/${products.length} pushed...`);
+    } catch (e) {
+      console.error(`\n  ❌ Network error: ${(e as Error).message}`);
+    }
+  }
+
+  console.log(`\n✅ Server updated — ${totalCreated} new, ${totalUpdated} refreshed`);
+  console.log(`   Live at: ${SERVER_URL}/api/gifts`);
+}
+
 async function main() {
   console.log('\n🚀 Cherish Her — Product Import Pipeline');
   console.log(`   AI tagging: ${USE_AI && AI_KEY ? '✓ Claude' : AI_KEY ? '✓ key found (add --ai flag)' : '✗ rule-based (no API key)'}`);
+  console.log(`   Server:     ${SERVER_URL ? `✓ ${SERVER_URL}` : '✗ not configured'}`);
   console.log(`   Dry run:    ${DRY_RUN ? '✓ preview only' : '✗ will write output'}\n`);
 
   if (!fs.existsSync(IMPORTS_DIR)) {
@@ -325,7 +371,7 @@ async function main() {
   for (let i = 0; i < products.length; i += BATCH) {
     const chunk = products.slice(i, i + BATCH);
     process.stdout.write(`\r  ${Math.min(i + BATCH, products.length)}/${products.length} tagged...`);
-    let aiTags = USE_AI && AI_KEY ? await tagWithAI(chunk) : null;
+    const aiTags = USE_AI && AI_KEY ? await tagWithAI(chunk) : null;
     for (let j = 0; j < chunk.length; j++) {
       const p = chunk[j];
       const tags = aiTags?.[j] ?? ruleTags(p.name, p.description, p.category);
@@ -353,6 +399,7 @@ async function main() {
     return;
   }
 
+  // Write local file (kept for fallback)
   const lines = tagged.map(p => `  {
     id: ${JSON.stringify(p.id)},
     name: ${JSON.stringify(p.name)},
@@ -378,7 +425,7 @@ async function main() {
     `// AUTO-GENERATED — DO NOT EDIT MANUALLY`,
     `// Generated: ${new Date().toISOString()}`,
     `// Products: ${tagged.length}`,
-    `// Regenerate: npx ts-node scripts/import-products.ts`,
+    `// Regenerate: npx tsx scripts/import-products.ts`,
     ``,
     `import type { Product } from '../types';`,
     ``,
@@ -397,10 +444,13 @@ async function main() {
 
   fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
   fs.writeFileSync(OUTPUT_FILE, output, 'utf-8');
-
   console.log(`\n✅ Written → src/data/products.generated.ts`);
   console.log(`   ${tagged.length} products ready for the app.`);
-  console.log(`\nNext: rebuild the app or push OTA update:`);
+
+  // Push to server
+  await pushToServer(tagged);
+
+  console.log(`\nNext: push OTA update to all users:`);
   console.log(`   eas update --channel production --message "New products"\n`);
 }
 

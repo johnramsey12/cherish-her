@@ -1,7 +1,7 @@
 // AUTO-GENERATED — DO NOT EDIT MANUALLY
-// Generated: 2026-06-08T00:53:20.462Z
+// Generated: 2026-06-12T17:32:54.633Z
 // Products: 10
-// Regenerate: npx ts-node scripts/import-products.ts
+// Regenerate: npx tsx scripts/import-products.ts
 
 import type { Product } from '../types';
 
