@@ -30,9 +30,11 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSPrivacyAccessedAPITypeReasons": {
           "NSPrivacyAccessedAPICategoryUserDefaults": [
+            "CA92.1",
             "CA92.1"
           ],
           "NSPrivacyAccessedAPICategoryFileTimestamp": [
+            "C617.1",
             "C617.1"
           ]
         }
@@ -50,6 +52,9 @@
       "package": "com.cherishher.app",
       "versionCode": 1,
       "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS",
         "RECEIVE_BOOT_COMPLETED",
         "SCHEDULE_EXACT_ALARM",
         "POST_NOTIFICATIONS"
@@ -85,7 +90,7 @@
     },
     "owner": "jramdev",
     "updates": {
-      "url": "https://u.expo.dev/REPLACE_WITH_YOUR_EAS_PROJECT_ID",
+      "url": "https://u.expo.dev/f84850c9-d00f-4b69-bfe3-20e7de0bf24b",
       "enabled": true,
       "fallbackToCacheTimeout": 0,
       "checkAutomatically": "ON_LOAD"
