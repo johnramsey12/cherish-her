@@ -11,6 +11,7 @@ import {
   Linking,
   TextInput,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, typography, spacing, radius } from '../constants/theme';
@@ -18,7 +19,8 @@ import { useSettingsStore, useProfileStore } from '../stores';
 import { ScreenHeader } from '../components/common/index';
 import { refreshAllReminders } from '../services/notificationService';
 
-// ─── Row types ───────────────────────────────
+const SERVER_URL = 'https://cherish-her-server-production.up.railway.app';
+
 interface ToggleRowProps {
   label: string;
   subtitle?: string;
@@ -73,34 +75,71 @@ const SectionLabel: React.FC<{ title: string }> = ({ title }) => (
 
 const Divider: React.FC = () => <View style={sectionStyles.divider} />;
 
-// ─── Main Screen ─────────────────────────────
 export const SettingsScreen: React.FC = () => {
   const { reminderConfig, updateReminders, performReset } = useSettingsStore();
   const { profile } = useProfileStore();
-  const [apiKey, setApiKey] = useState('');
-  const [apiKeyVisible, setApiKeyVisible] = useState(false);
-  const [apiKeySaved, setApiKeySaved] = useState(false);
 
-  // Load saved API key on mount
+  // Creator code state
+  const [creatorCode, setCreatorCode]         = useState('');
+  const [codeInput, setCodeInput]             = useState('');
+  const [creatorName, setCreatorName]         = useState('');
+  const [codeVerifying, setCodeVerifying]     = useState(false);
+  const [codeError, setCodeError]             = useState('');
+
+  // Load saved creator code on mount
   React.useEffect(() => {
-    AsyncStorage.getItem('@cherish_anthropic_key').then((v) => {
-      if (v) setApiKey(v);
+    AsyncStorage.getItem('@cherish_creator_code').then(code => {
+      if (code) {
+        setCreatorCode(code);
+        setCodeInput(code);
+      }
+    });
+    AsyncStorage.getItem('@cherish_creator_name').then(name => {
+      if (name) setCreatorName(name);
     });
   }, []);
 
-  const handleToggle = async (
-    key: keyof typeof reminderConfig,
-    value: boolean
-  ) => {
+  const handleVerifyCode = async () => {
+    const code = codeInput.trim().toUpperCase();
+    if (!code) return;
+    setCodeVerifying(true);
+    setCodeError('');
+    try {
+      const res = await fetch(`${SERVER_URL}/api/creators/verify/${code}`);
+      if (res.ok) {
+        const data = await res.json() as { valid: boolean; name: string };
+        if (data.valid) {
+          await AsyncStorage.setItem('@cherish_creator_code', code);
+          await AsyncStorage.setItem('@cherish_creator_name', data.name);
+          setCreatorCode(code);
+          setCreatorName(data.name);
+          setCodeError('');
+        } else {
+          setCodeError('Code not found. Check the code and try again.');
+        }
+      } else {
+        setCodeError('Code not found. Check the code and try again.');
+      }
+    } catch {
+      setCodeError('Could not connect to server. Try again.');
+    } finally {
+      setCodeVerifying(false);
+    }
+  };
+
+  const handleClearCode = async () => {
+    await AsyncStorage.removeItem('@cherish_creator_code');
+    await AsyncStorage.removeItem('@cherish_creator_name');
+    setCreatorCode('');
+    setCreatorName('');
+    setCodeInput('');
+    setCodeError('');
+  };
+
+  const handleToggle = async (key: keyof typeof reminderConfig, value: boolean) => {
     const next = { ...reminderConfig, [key]: value };
     await updateReminders({ [key]: value });
     await refreshAllReminders(profile, next);
-  };
-
-  const handleSaveApiKey = async () => {
-    await AsyncStorage.setItem('@cherish_anthropic_key', apiKey.trim());
-    setApiKeySaved(true);
-    setTimeout(() => setApiKeySaved(false), 2000);
   };
 
   const handleReset = () => {
@@ -141,6 +180,73 @@ export const SettingsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+
+        {/* ── CREATOR PARTNERSHIP ── */}
+        <SectionLabel title="CREATOR PARTNERSHIP" />
+        <View style={styles.card}>
+          <View style={styles.creatorSection}>
+
+            {creatorCode ? (
+              /* Active code state */
+              <View style={styles.codeActive}>
+                <View style={styles.codeActiveBadge}>
+                  <Text style={styles.codeActiveIcon}>✦</Text>
+                  <View style={styles.codeActiveText}>
+                    <Text style={styles.codeActiveName}>{creatorName || creatorCode}</Text>
+                    <Text style={styles.codeActiveSub}>Creator code active · {creatorCode}</Text>
+                  </View>
+                </View>
+                <Text style={styles.codeActiveDesc}>
+                  Purchases made through Cherish Her support this creator.
+                </Text>
+                <TouchableOpacity style={styles.clearCodeBtn} onPress={handleClearCode}>
+                  <Text style={styles.clearCodeText}>Remove code</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              /* Code entry state */
+              <View>
+                <Text style={styles.creatorTitle}>Have a creator code?</Text>
+                <Text style={styles.creatorDesc}>
+                  Enter a code from your favorite creator. When you shop through the app, they earn a commission at no extra cost to you.
+                </Text>
+                <View style={styles.codeRow}>
+                  <TextInput
+                    style={styles.codeInput}
+                    value={codeInput}
+                    onChangeText={t => { setCodeInput(t.toUpperCase()); setCodeError(''); }}
+                    placeholder="EMMA"
+                    placeholderTextColor={colors.textTertiary}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    returnKeyType="done"
+                    onSubmitEditing={handleVerifyCode}
+                  />
+                  <TouchableOpacity
+                    style={[styles.verifyBtn, (!codeInput.trim() || codeVerifying) && styles.verifyBtnDisabled]}
+                    onPress={handleVerifyCode}
+                    disabled={!codeInput.trim() || codeVerifying}
+                    activeOpacity={0.7}
+                  >
+                    {codeVerifying
+                      ? <ActivityIndicator size="small" color={colors.background} />
+                      : <Text style={styles.verifyBtnText}>Apply</Text>
+                    }
+                  </TouchableOpacity>
+                </View>
+                {codeError ? (
+                  <Text style={styles.codeError}>{codeError}</Text>
+                ) : null}
+                <TouchableOpacity
+                  onPress={() => Linking.openURL('https://johnramsey12.github.io/cherish-her/creators.html')}
+                >
+                  <Text style={styles.creatorLink}>Want your own creator code? Apply here →</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+
         {/* ── REMINDERS ── */}
         <SectionLabel title="REMINDERS" />
         <View style={styles.card}>
@@ -184,49 +290,7 @@ export const SettingsScreen: React.FC = () => {
           />
         </View>
 
-        {/* ── AI SETTINGS ── */}
-        <SectionLabel title="AI FEATURES" />
-        <View style={styles.card}>
-          <View style={styles.apiKeySection}>
-            <Text style={styles.apiKeyTitle}>🤖 Anthropic API Key</Text>
-            <Text style={styles.apiKeyDesc}>
-              Adds AI-powered gift explanations and personalized insights. Optional — the app works fully without it.
-            </Text>
-            <View style={styles.apiKeyRow}>
-              <TextInput
-                style={styles.apiKeyInput}
-                value={apiKey}
-                onChangeText={setApiKey}
-                placeholder="sk-ant-..."
-                placeholderTextColor={colors.textTertiary}
-                secureTextEntry={!apiKeyVisible}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <TouchableOpacity
-                style={styles.apiKeyToggle}
-                onPress={() => setApiKeyVisible(!apiKeyVisible)}
-              >
-                <Text style={styles.apiKeyToggleText}>{apiKeyVisible ? '🙈' : '👁'}</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={[styles.saveKeyBtn, apiKeySaved && styles.saveKeyBtnSuccess]}
-              onPress={handleSaveApiKey}
-            >
-              <Text style={styles.saveKeyBtnText}>
-                {apiKeySaved ? '✓ Saved' : 'Save Key'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => Linking.openURL('https://console.anthropic.com/settings/keys')}
-            >
-              <Text style={styles.apiKeyLink}>Get a free API key →</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* ── DATA ── */}
+        {/* ── DATA & PRIVACY ── */}
         <SectionLabel title="DATA & PRIVACY" />
         <View style={styles.card}>
           <LinkRow
@@ -272,11 +336,10 @@ export const SettingsScreen: React.FC = () => {
           <LinkRow
             icon="🔒"
             label="Privacy Policy"
-            onPress={() => Linking.openURL('https://cherishher.app/privacy')}
+            onPress={() => Linking.openURL('https://johnramsey12.github.io/cherish-her/privacy-policy.html')}
           />
         </View>
 
-        {/* Tagline */}
         <Text style={styles.tagline}>
           Made with love for the people you cherish.{'\n'}
           All data stays on your device, always.
@@ -303,66 +366,121 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 
-  apiKeySection: {
+  // Creator section
+  creatorSection: {
     padding: spacing.base,
-    gap: spacing.sm,
   },
-  apiKeyTitle: {
+  creatorTitle: {
     fontFamily: typography.fonts.bodyMedium,
     fontSize: typography.sizes.base,
     color: colors.textPrimary,
+    marginBottom: 6,
   },
-  apiKeyDesc: {
+  creatorDesc: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
     lineHeight: 20,
+    marginBottom: spacing.md,
   },
-  apiKeyRow: {
+  codeRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
-  apiKeyInput: {
+  codeInput: {
     flex: 1,
+    height: 44,
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.base,
+    color: colors.textPrimary,
+    letterSpacing: 2,
+  },
+  verifyBtn: {
+    height: 44,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  verifyBtnDisabled: {
+    opacity: 0.4,
+  },
+  verifyBtnText: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.base,
+    color: colors.background,
+  },
+  codeError: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.error,
+    marginBottom: spacing.sm,
+  },
+  creatorLink: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.sm,
-    color: colors.textPrimary,
+    color: colors.primary,
+    marginTop: spacing.xs,
   },
-  apiKeyToggle: {
-    width: 40, height: 40,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.surfaceElevated,
+
+  // Active code state
+  codeActive: {
+    gap: spacing.sm,
+  },
+  codeActiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.primaryMuted,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: spacing.md,
+  },
+  codeActiveIcon: {
+    fontSize: 22,
+    color: colors.primary,
+  },
+  codeActiveText: {
+    flex: 1,
+  },
+  codeActiveName: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: typography.sizes.base,
+    color: colors.primary,
+  },
+  codeActiveSub: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  codeActiveDesc: {
+    fontFamily: typography.fonts.body,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  clearCodeBtn: {
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  apiKeyToggleText: { fontSize: 16 },
-  saveKeyBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  saveKeyBtnSuccess: {
-    backgroundColor: colors.success,
-  },
-  saveKeyBtnText: {
-    fontFamily: typography.fonts.bodyMedium,
-    fontSize: typography.sizes.base,
-    color: colors.textInverse,
-  },
-  apiKeyLink: {
+  clearCodeText: {
     fontFamily: typography.fonts.body,
     fontSize: typography.sizes.sm,
-    color: colors.primary,
-    textAlign: 'center',
+    color: colors.textTertiary,
   },
 
   tagline: {
@@ -426,6 +544,6 @@ const sectionStyles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: colors.border,
-    marginLeft: spacing.base + 24 + spacing.md, // align with text, past icon
+    marginLeft: spacing.base + 24 + spacing.md,
   },
 });
