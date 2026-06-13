@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Cherish Her Creators</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0D0C0D;color:#FAF8F5;min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;padding:32px 20px 100px}
+.logo{font-size:11px;letter-spacing:3px;color:#C8956A;text-transform:uppercase;margin-bottom:24px}
+.loading{text-align:center;padding:80px 24px;color:#9a9a9a}
+/* Top bar */
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap}
+.creator-info .cn{font-size:20px;font-weight:300}
+.creator-info .ch{font-size:13px;color:#9a9a9a;margin-top:3px}
+.code-badge{display:inline-block;background:#C8956A22;border:1px solid #C8956A44;border-radius:20px;padding:3px 14px;font-size:11px;color:#C8956A;letter-spacing:2px;margin-top:6px}
+.top-actions{display:flex;gap:8px;align-items:center}
+.btn-sm{padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;border:none;font-family:inherit}
+.btn-primary{background:#C8956A;color:#0D0C0D;font-weight:600}
+.btn-outline{background:transparent;color:#9a9a9a;border:1px solid #2a2a2a}
+.btn-outline:hover{color:#FAF8F5;border-color:#555}
+/* Alert banners */
+.alert{border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:13px;line-height:1.6;display:flex;align-items:center;gap:12px}
+.alert-warn{background:#2a1f00;border:1px solid #C8956A44;color:#C8956A}
+.alert-info{background:#001a2a;border:1px solid #1e4a7a;color:#7986cb}
+.alert a{color:inherit;font-weight:600}
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid #2a2a2a;margin-bottom:24px;overflow-x:auto}
+.tab{padding:10px 20px;font-size:13px;color:#9a9a9a;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .2s}
+.tab.active{color:#C8956A;border-bottom-color:#C8956A}
+.panel{display:none}.panel.active{display:block}
+/* Payout banner */
+.payout-banner{background:linear-gradient(135deg,#1a1000,#0D0C0D);border:1px solid #C8956A44;border-radius:16px;padding:24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:16px}
+.payout-amount{font-size:36px;font-weight:300;color:#C8956A}
+.payout-sub{font-size:12px;color:#9a9a9a;margin-top:4px}
+.payout-meta{text-align:right}
+.payout-date{font-size:15px;font-weight:500}
+.payout-date-l{font-size:11px;color:#9a9a9a;margin-top:3px}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat{background:#161515;border:1px solid #2a2a2a;border-radius:12px;padding:16px}
+.stat-v{font-size:22px;font-weight:300;color:#C8956A}
+.stat-l{font-size:11px;color:#9a9a9a;margin-top:4px;text-transform:uppercase;letter-spacing:.8px}
+/* Cards */
+.card{background:#161515;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:16px}
+.card h3{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#9a9a9a;margin-bottom:16px}
+/* Month grid */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mitem{text-align:center}
+.mv{font-size:20px;font-weight:300}
+.ml{font-size:11px;color:#9a9a9a;margin-top:4px}
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding-bottom:12px;border-bottom:1px solid #2a2a2a}
+td{padding:11px 0;border-bottom:1px solid #1a1a1a;font-size:13px}
+td.right{text-align:right}
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px}
+.b-pending{background:#1a2f1a;color:#4caf82;border:1px solid #2d5a2d}
+.b-paid{background:#1a1a2f;color:#7986cb;border:1px solid #2d3a7a}
+/* Monthly bar chart */
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:80px;margin-bottom:8px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar{width:100%;background:#C8956A;border-radius:4px 4px 0 0;min-height:2px;transition:height .3s}
+.bar-label{font-size:10px;color:#555}
+/* Account form */
+.field{margin-bottom:14px}
+label{display:block;font-size:11px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+input,select{width:100%;background:#0D0C0D;border:1px solid #2a2a2a;border-radius:10px;padding:11px 14px;color:#FAF8F5;font-size:14px;outline:none}
+input:focus,select:focus{border-color:#C8956A}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.save-row{display:flex;justify-content:flex-end;margin-top:8px}
+.btn-save{background:transparent;color:#C8956A;border:1px solid #C8956A44;border-radius:8px;padding:9px 20px;font-size:13px;cursor:pointer}
+.btn-save:hover{background:#C8956A11}
+.msg-ok{font-size:12px;color:#4caf82;margin-top:6px;display:none}
+.msg-err{font-size:12px;color:#ef5350;margin-top:6px;display:none}
+/* Stripe setup */
+.stripe-card{background:#0D0C0D;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:12px}
+.stripe-card h4{font-size:14px;margin-bottom:6px}
+.stripe-card p{font-size:13px;color:#9a9a9a;line-height:1.6;margin-bottom:14px}
+.stripe-badge{display:inline-flex;align-items:center;gap:6px;background:#635BFF22;border:1px solid #635BFF44;border-radius:8px;padding:4px 12px;font-size:12px;color:#635BFF;margin-bottom:8px}
+/* Danger */
+.danger-zone{border:1px solid #ef535022;border-radius:12px;padding:20px}
+.danger-zone h3{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#ef5350;margin-bottom:12px}
+.danger-desc{font-size:13px;color:#9a9a9a;line-height:1.6;margin-bottom:14px}
+.btn-danger{background:transparent;color:#ef5350;border:1px solid #ef535033;border-radius:8px;padding:9px 20px;font-size:13px;cursor:pointer}
+.confirm-box{background:#0D0C0D;border:1px solid #2a2a2a;border-radius:10px;padding:16px;margin-top:12px;display:none}
+.confirm-box p{font-size:13px;color:#9a9a9a;margin-bottom:12px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">Cherish Her</div>
+
+  <div class="loading" id="loading">Loading your dashboard...</div>
+
+  <div id="main" style="display:none">
+    <div class="top">
+      <div class="creator-info">
+        <div class="cn" id="dName"></div>
+        <div class="ch" id="dHandle"></div>
+        <div class="code-badge" id="dCode"></div>
+      </div>
+      <div class="top-actions">
+        <button class="btn-sm btn-outline" onclick="signout()">Sign out</button>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alert alert-warn" id="alertContract" style="display:none">
+      <span>📋</span>
+      <span>You haven't signed your contractor agreement yet. <a href="./creator-contract.html">Sign now to activate payouts →</a></span>
+    </div>
+    <div class="alert alert-info" id="alertStripe" style="display:none">
+      <span>🏦</span>
+      <span>Set up direct deposit to receive your payouts. Go to <strong>Account → Payout Setup</strong> to connect your bank.</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="tab('earnings')">Earnings</div>
+      <div class="tab" onclick="tab('history')">History</div>
+      <div class="tab" onclick="tab('account')">Account</div>
+    </div>
+
+    <!-- EARNINGS TAB -->
+    <div class="panel active" id="panel-earnings">
+      <div class="payout-banner">
+        <div>
+          <div class="payout-amount" id="dPending">$0.00</div>
+          <div class="payout-sub">Pending payout</div>
+        </div>
+        <div class="payout-meta">
+          <div class="payout-date" id="dNextPayout"></div>
+          <div class="payout-date-l">Next payout date</div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-v" id="dAllEarned">$0</div><div class="stat-l">All time earned</div></div>
+        <div class="stat"><div class="stat-v" id="dPurchases">0</div><div class="stat-l">Purchases</div></div>
+        <div class="stat"><div class="stat-v" id="dPaid">$0</div><div class="stat-l">Total paid</div></div>
+      </div>
+
+      <div class="card">
+        <h3>This Month</h3>
+        <div class="mgrid">
+          <div class="mitem"><div class="mv" id="dMClicks">0</div><div class="ml">Clicks</div></div>
+          <div class="mitem"><div class="mv" id="dMPurchases">0</div><div class="ml">Purchases</div></div>
+          <div class="mitem"><div class="mv" style="color:#C8956A" id="dMEarned">$0</div><div class="ml">Earned</div></div>
+        </div>
+      </div>
+
+      <div class="card" id="monthlyCard" style="display:none">
+        <h3>Monthly Earnings</h3>
+        <div class="bar-chart" id="barChart"></div>
+        <div style="display:flex;justify-content:space-between" id="barLabels"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="panel" id="panel-history">
+      <div class="card">
+        <h3>Earnings History</h3>
+        <table>
+          <thead><tr><th>Date</th><th>Network</th><th>Sale</th><th>Your 3%</th><th>Status</th></tr></thead>
+          <tbody id="dTable"><tr><td colspan="5" style="color:#555;padding:24px 0;text-align:center">No earnings yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ACCOUNT TAB -->
+    <div class="panel" id="panel-account">
+
+      <div class="card">
+        <h3>Profile</h3>
+        <div class="frow">
+          <div class="field"><label>First Name</label><input id="fn" type="text"></div>
+          <div class="field"><label>Last Name</label><input id="ln" type="text"></div>
+        </div>
+        <div class="field"><label>Social Handle</label><input id="handle" type="text" placeholder="@yourhandle"></div>
+        <div class="field"><label>Primary Platform</label>
+          <select id="platform">
+            <option value="tiktok">TikTok</option>
+            <option value="instagram">Instagram</option>
+            <option value="youtube">YouTube</option>
+            <option value="pinterest">Pinterest</option>
+          </select>
+        </div>
+        <div class="save-row"><button class="btn-save" onclick="saveProfile()">Save Profile</button></div>
+        <div class="msg-ok" id="profileOk">Profile updated</div>
+        <div class="msg-err" id="profileErr"></div>
+      </div>
+
+      <div class="card">
+        <h3>Payout Setup</h3>
+        <div class="stripe-card">
+          <div id="stripeStatus"></div>
+          <div id="stripeSetupArea">
+            <div class="stripe-badge">🔒 Secured by Stripe</div>
+            <h4>Connect your bank account</h4>
+            <p>Your banking information is stored securely by Stripe — we never see or store your account details. Payouts arrive 2-3 business days after the second Monday of each month.</p>
+            <button class="btn-save" onclick="setupStripe()">Set Up Direct Deposit →</button>
+          </div>
+          <div id="stripeConnected" style="display:none">
+            <div class="stripe-badge">✓ Bank connected</div>
+            <p style="font-size:13px;color:#9a9a9a;margin-top:8px">Your bank account is connected. Payouts will be deposited automatically on the second Monday of each month.</p>
+          </div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>Backup Payout Email (PayPal)</label><input id="payEmail" type="email" placeholder="Optional"></div>
+        <div class="save-row"><button class="btn-save" onclick="saveContact()">Save</button></div>
+        <div class="msg-ok" id="contactOk">Saved</div>
+      </div>
+
+      <div class="card">
+        <h3>Legal</h3>
+        <p style="font-size:13px;color:#9a9a9a;line-height:1.6;margin-bottom:12px">
+          <span id="contractStatus"></span>
+          You are an independent contractor. You are responsible for all taxes on your earnings.
+          The Company will issue a 1099-NEC if you earn $600+ in a calendar year.
+        </p>
+        <a href="./creator-contract.html" style="font-size:13px;color:#C8956A">View / Re-sign Agreement →</a>
+      </div>
+
+      <div class="card">
+        <h3>Your Code</h3>
+        <p style="font-size:13px;color:#9a9a9a;line-height:1.6;margin-bottom:8px">
+          Share <strong id="codeDisplay" style="color:#C8956A;letter-spacing:2px"></strong> with your audience.
+          They enter it in the Cherish Her app under Settings to support you with every purchase.
+        </p>
+        <p style="font-size:12px;color:#555">Commission rate: <span id="commRate">3%</span> of every purchase value</p>
+      </div>
+
+      <div class="danger-zone">
+        <h3>Danger Zone</h3>
+        <div class="danger-desc">Cancelling deactivates your creator code immediately. Pending earnings above $50 will still be paid on the next payout date.</div>
+        <button class="btn-danger" onclick="showCancel()">Cancel Creator Account</button>
+        <div class="confirm-box" id="cancelBox">
+          <p>Type <strong>CANCEL</strong> to confirm. This cannot be undone.</p>
+          <input type="text" id="cancelInput" placeholder="CANCEL" style="margin-bottom:12px">
+          <div class="btn-row">
+            <button class="btn-danger" onclick="cancelAccount()">Confirm Cancellation</button>
+            <button class="btn-save" onclick="hideCancel()">Never mind</button>
+          </div>
+          <div class="msg-err" id="cancelErr"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SERVER = 'https://cherish-her-server-production.up.railway.app';
+let token = '';
+let creatorData = null;
+
+function fmt(n){ return '$'+(n||0).toFixed(2); }
+
+window.addEventListener('DOMContentLoaded', async () => {
+  token = localStorage.getItem('cherish_creator_token') || '';
+  if (!token) { window.location.href = './creator-login.html'; return; }
+
+  const res = await fetch(SERVER + '/api/auth/validate', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ token }),
+  }).catch(()=>null);
+
+  if (!res || !res.ok) { window.location.href = './creator-login.html'; return; }
+  const v = await res.json();
+  if (!v.valid) { window.location.href = './creator-login.html'; return; }
+
+  await loadDashboard(v.creator.code);
+});
+
+async function loadDashboard(code) {
+  const res = await fetch(SERVER + '/api/creators/dashboard/' + code).catch(()=>null);
+  if (!res || !res.ok) { window.location.href = './creator-login.html'; return; }
+  const d = await res.json();
+  creatorData = d;
+
+  const nameParts = (d.creator.name||'').split(' ');
+  document.getElementById('dName').textContent = d.creator.name;
+  document.getElementById('dHandle').textContent = '@' + d.creator.handle;
+  document.getElementById('dCode').textContent = d.creator.code;
+  document.getElementById('dPending').textContent = fmt(d.stats.pendingPayout);
+  document.getElementById('dNextPayout').textContent = d.nextPayout;
+  document.getElementById('dAllEarned').textContent = fmt(d.stats.allTimeEarned);
+  document.getElementById('dPurchases').textContent = d.stats.allTimePurchases;
+  document.getElementById('dPaid').textContent = fmt(d.stats.totalPaid);
+  document.getElementById('dMClicks').textContent = d.thisMonth.clicks;
+  document.getElementById('dMPurchases').textContent = d.thisMonth.purchases;
+  document.getElementById('dMEarned').textContent = fmt(d.thisMonth.earned);
+  document.getElementById('fn').value = nameParts[0]||'';
+  document.getElementById('ln').value = nameParts.slice(1).join(' ')||'';
+  document.getElementById('handle').value = d.creator.handle||'';
+  document.getElementById('platform').value = d.creator.platform||'instagram';
+  document.getElementById('payEmail').value = d.creator.paymentEmail||'';
+  document.getElementById('codeDisplay').textContent = d.creator.code;
+  document.getElementById('commRate').textContent = ((d.creator.commissionRate||0.03)*100).toFixed(0)+'%';
+
+  if (!d.creator.contractSigned) document.getElementById('alertContract').style.display='flex';
+  if (!d.creator.stripeOnboarded) document.getElementById('alertStripe').style.display='flex';
+
+  document.getElementById('contractStatus').textContent = d.creator.contractSigned
+    ? '✓ Agreement signed. ' : '⚠ Agreement not signed. ';
+
+  if (d.creator.stripeOnboarded) {
+    document.getElementById('stripeSetupArea').style.display='none';
+    document.getElementById('stripeConnected').style.display='block';
+  }
+
+  if (d.recentEarnings && d.recentEarnings.length > 0) {
+    document.getElementById('dTable').innerHTML = d.recentEarnings.map(e=>`
+      <tr>
+        <td style="color:#9a9a9a">${new Date(e.createdAt).toLocaleDateString()}</td>
+        <td style="color:#9a9a9a;text-transform:capitalize">${e.affiliateNetwork}</td>
+        <td>${fmt(e.saleAmount)}</td>
+        <td style="color:#C8956A;font-weight:500">${fmt(e.creatorCommission)}</td>
+        <td class="right"><span class="badge ${e.status==='paid'?'b-paid':'b-pending'}">${e.status}</span></td>
+      </tr>`).join('');
+  }
+
+  if (d.monthlyBreakdown && d.monthlyBreakdown.length > 1) {
+    const months = d.monthlyBreakdown.slice(0,6).reverse();
+    const max = Math.max(...months.map(m=>m._sum?.creatorCommission||0), 1);
+    document.getElementById('monthlyCard').style.display='block';
+    document.getElementById('barChart').innerHTML = months.map(m=>{
+      const amt = m._sum?.creatorCommission||0;
+      const h = Math.round((amt/max)*72);
+      return `<div class="bar-wrap"><div class="bar" style="height:${h}px" title="${fmt(amt)}"></div></div>`;
+    }).join('');
+    document.getElementById('barLabels').innerHTML = months.map(m=>`
+      <div style="flex:1;text-align:center;font-size:10px;color:#555">${m.month.slice(5)}</div>`).join('');
+  }
+
+  document.getElementById('loading').style.display='none';
+  document.getElementById('main').style.display='block';
+}
+
+function tab(t) {
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['earnings','history','account'][i]===t));
+  document.querySelectorAll('.panel').forEach((el,i)=>el.classList.toggle('active',['earnings','history','account'][i]===t));
+}
+
+async function saveProfile() {
+  document.getElementById('profileOk').style.display='none';
+  document.getElementById('profileErr').style.display='none';
+  try {
+    const res = await fetch(SERVER+'/api/creators/profile', {
+      method:'PUT', headers:{'Content-Type':'application/json','x-session-token':token},
+      body:JSON.stringify({ name:document.getElementById('fn').value+' '+document.getElementById('ln').value, handle:document.getElementById('handle').value, platform:document.getElementById('platform').value }),
+    });
+    if(!res.ok) throw new Error();
+    document.getElementById('profileOk').style.display='block';
+    setTimeout(()=>document.getElementById('profileOk').style.display='none',3000);
+  } catch { document.getElementById('profileErr').textContent='Failed to update';document.getElementById('profileErr').style.display='block'; }
+}
+
+async function saveContact() {
+  document.getElementById('contactOk').style.display='none';
+  try {
+    await fetch(SERVER+'/api/creators/profile', {
+      method:'PUT', headers:{'Content-Type':'application/json','x-session-token':token},
+      body:JSON.stringify({ paymentEmail:document.getElementById('payEmail').value }),
+    });
+    document.getElementById('contactOk').style.display='block';
+    setTimeout(()=>document.getElementById('contactOk').style.display='none',3000);
+  } catch {}
+}
+
+async function setupStripe() {
+  alert('Stripe Connect onboarding coming soon. For now, add your PayPal email above as a backup payout method.');
+}
+
+function showCancel(){ document.getElementById('cancelBox').style.display='block'; }
+function hideCancel(){ document.getElementById('cancelBox').style.display='none'; }
+
+async function cancelAccount() {
+  if (document.getElementById('cancelInput').value !== 'CANCEL') {
+    document.getElementById('cancelErr').textContent='Type CANCEL in all caps';
+    document.getElementById('cancelErr').style.display='block';
+    return;
+  }
+  try {
+    const res = await fetch(SERVER+'/api/creators/cancel',{
+      method:'POST', headers:{'Content-Type':'application/json','x-session-token':token},
+      body:JSON.stringify({confirm:'CANCEL'}),
+    });
+    if(!res.ok) throw new Error();
+    alert('Account cancelled. Pending earnings will be paid on next payout date.');
+    signout();
+  } catch { document.getElementById('cancelErr').textContent='Failed. Email creators@cherishher.app';document.getElementById('cancelErr').style.display='block'; }
+}
+
+async function signout() {
+  await fetch(SERVER+'/api/auth/signout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})}).catch(()=>{});
+  localStorage.removeItem('cherish_creator_token');
+  localStorage.removeItem('cherish_creator_code');
+  window.location.href='./creator-login.html';
+}
+</script>
+</body>
+</html>

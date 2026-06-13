@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — Cherish Her Creators</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0D0C0D;color:#FAF8F5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#161515;border:1px solid #2a2a2a;border-radius:20px;padding:40px 36px;width:100%;max-width:420px}
+.logo{font-size:12px;letter-spacing:3px;color:#C8956A;text-transform:uppercase;margin-bottom:28px;text-align:center}
+h1{font-size:22px;font-weight:300;margin-bottom:8px;text-align:center}
+.sub{font-size:13px;color:#9a9a9a;text-align:center;margin-bottom:28px;line-height:1.6}
+.field{margin-bottom:16px}
+label{display:block;font-size:11px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+input{width:100%;background:#0D0C0D;border:1px solid #2a2a2a;border-radius:10px;padding:14px 16px;color:#FAF8F5;font-size:15px;outline:none;transition:border-color .2s}
+input:focus{border-color:#C8956A}
+input::placeholder{color:#444}
+.btn{width:100%;background:#C8956A;color:#0D0C0D;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{width:100%;background:transparent;color:#9a9a9a;border:none;font-size:13px;cursor:pointer;margin-top:12px;padding:8px}
+.btn-ghost:hover{color:#FAF8F5}
+.err{color:#ef5350;font-size:12px;margin-top:8px;text-align:center}
+.step{display:none}.step.active{display:block}
+.otp-input{font-size:28px;letter-spacing:12px;text-align:center;font-weight:300}
+.check{text-align:center;font-size:40px;margin-bottom:16px}
+.divider{border:none;border-top:1px solid #2a2a2a;margin:20px 0}
+.link{color:#C8956A;font-size:13px;text-align:center;display:block;margin-top:16px;cursor:pointer;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Cherish Her</div>
+
+  <!-- Step 1: Enter email -->
+  <div class="step active" id="step1">
+    <h1>Creator Sign In</h1>
+    <p class="sub">Enter the email address associated with your creator account. We'll send you a sign-in code.</p>
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <button class="btn" id="sendBtn" onclick="sendOTP()">Send Sign-In Code</button>
+    <div class="err" id="step1Err"></div>
+    <hr class="divider">
+    <a href="./creators.html" class="link">Apply to become a creator →</a>
+  </div>
+
+  <!-- Step 2: Enter OTP -->
+  <div class="step" id="step2">
+    <div class="check">📬</div>
+    <h1>Check your email</h1>
+    <p class="sub" id="otpSub">We sent a 6-digit code to your email. It expires in 10 minutes.</p>
+    <div class="field">
+      <label>Sign-In Code</label>
+      <input type="text" id="otpInput" class="otp-input" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+    </div>
+    <button class="btn" id="verifyBtn" onclick="verifyOTP()">Verify Code</button>
+    <button class="btn-ghost" onclick="goBack()">Use a different email</button>
+    <div class="err" id="step2Err"></div>
+  </div>
+
+  <!-- Step 3: Success -->
+  <div class="step" id="step3">
+    <div class="check">✦</div>
+    <h1>Signed in</h1>
+    <p class="sub">Redirecting you to your dashboard...</p>
+  </div>
+</div>
+
+<script>
+const SERVER = 'https://cherish-her-server-production.up.railway.app';
+let emailVal = '';
+
+// Check for existing session
+window.addEventListener('DOMContentLoaded', async () => {
+  const token = localStorage.getItem('cherish_creator_token');
+  if (token) {
+    const res = await fetch(SERVER + '/api/auth/validate', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ token }),
+    }).catch(()=>null);
+    if (res && res.ok) {
+      const d = await res.json();
+      if (d.valid) { window.location.href = './creator-dashboard.html'; return; }
+    }
+    localStorage.removeItem('cherish_creator_token');
+  }
+});
+
+async function sendOTP() {
+  const email = document.getElementById('emailInput').value.trim();
+  if (!email) return;
+  emailVal = email;
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('step1Err').textContent = '';
+  try {
+    await fetch(SERVER + '/api/auth/send-otp', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email }),
+    });
+    document.getElementById('otpSub').textContent = 'We sent a 6-digit code to ' + email + '. It expires in 10 minutes.';
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+    document.getElementById('otpInput').focus();
+  } catch {
+    document.getElementById('step1Err').textContent = 'Failed to send code. Please try again.';
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+async function verifyOTP() {
+  const otp = document.getElementById('otpInput').value.trim();
+  if (otp.length !== 6) return;
+  document.getElementById('verifyBtn').disabled = true;
+  document.getElementById('step2Err').textContent = '';
+  try {
+    const res = await fetch(SERVER + '/api/auth/verify-otp', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: emailVal, otp }),
+    });
+    const d = await res.json();
+    if (!res.ok || !d.success) {
+      document.getElementById('step2Err').textContent = d.error || 'Invalid code. Please try again.';
+      document.getElementById('verifyBtn').disabled = false;
+      return;
+    }
+    localStorage.setItem('cherish_creator_token', d.token);
+    localStorage.setItem('cherish_creator_code', d.creator.code);
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step3').classList.add('active');
+    setTimeout(() => { window.location.href = './creator-dashboard.html'; }, 1200);
+  } catch {
+    document.getElementById('step2Err').textContent = 'Verification failed. Please try again.';
+    document.getElementById('verifyBtn').disabled = false;
+  }
+}
+
+function goBack() {
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById('step1').classList.add('active');
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('otpInput').value = '';
+}
+
+document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key==='Enter') sendOTP(); });
+document.getElementById('otpInput')?.addEventListener('keydown', e => { if (e.key==='Enter') verifyOTP(); });
+document.getElementById('otpInput')?.addEventListener('input', e => {
+  const v = (e.target as HTMLInputElement).value.replace(/[^0-9]/g,'');
+  (e.target as HTMLInputElement).value = v;
+  if (v.length === 6) verifyOTP();
+});
+</script>
+</body>
+</html>
