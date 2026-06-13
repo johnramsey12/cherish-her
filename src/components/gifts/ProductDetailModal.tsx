@@ -17,6 +17,7 @@ import { Button } from '../common/Button';
 import { Badge } from '../common/index';
 import { useGiftStore } from '../../stores';
 import { generateGiftExplanation } from '../../services/aiService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -57,10 +58,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
   };
 
-  const handleAffiliate = () => {
+  const handleAffiliate = async () => {
     if (!product) return;
     recordInteraction(product.id, 'clicked');
-    Linking.openURL(product.affiliateLink).catch(() => {});
+
+    const creatorCode = await AsyncStorage.getItem('@cherish_creator_code');
+    let url = product.affiliateLink;
+
+    if (creatorCode) {
+      const SERVER_URL = 'https://cherish-her-server-production.up.railway.app';
+      url = `${SERVER_URL}/api/creators/track?creator=${creatorCode}&product=${product.id}&network=${product.affiliateNetwork}&link=${encodeURIComponent(product.affiliateLink)}`;
+    }
+
+    Linking.openURL(url).catch(() => {});
   };
 
   const handleSave = () => {
