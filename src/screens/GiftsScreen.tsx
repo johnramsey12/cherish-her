@@ -22,6 +22,7 @@ import { useTasteProfileStore } from '../stores/useTasteProfileStore';
 import { StyleProfileSurvey } from '../components/surveys/StyleProfileSurvey';
 import type { StyleArchetype, ColorPalette } from '../types/tasteProfile';
 import { searchProducts } from '../utils/search';
+import { applyPersonalization } from '../utils/personalization';
 
 function serverProductToScored(p: ServerProduct): ScoredProduct {
   return {
@@ -65,7 +66,7 @@ export const GiftsScreen: React.FC = () => {
   const [selectedStyleArchetype, setSelectedStyleArchetype] = useState<StyleArchetype | undefined>(undefined);
   const [selectedColorPalette, setSelectedColorPalette] = useState<ColorPalette | undefined>(undefined);
   const [styleSurveyVisible, setStyleSurveyVisible] = useState(false);
-  const { styleProfileCompleted } = useTasteProfileStore();
+  const { tasteProfile, styleProfileCompleted } = useTasteProfileStore();
 
   const loadProducts = useCallback(async (refreshing = false) => {
     if (refreshing) setIsRefreshing(true);
@@ -114,7 +115,7 @@ export const GiftsScreen: React.FC = () => {
   });
 
   const displayProducts = searchQuery.trim() === ''
-    ? filteredProducts
+    ? applyPersonalization(filteredProducts, tasteProfile)
     : searchProducts(filteredProducts, searchQuery);
 
   const handleOccasionChange   = useCallback((o?: OccasionTag) => setSelectedOccasion(o), []);
