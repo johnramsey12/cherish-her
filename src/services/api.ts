@@ -132,7 +132,7 @@ export async function logEvent(event: {
     await fetch(`${SERVER_URL}/api/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...event, deviceId, profileHash }),
+      body: JSON.stringify({ ...event, sessionId: deviceId, profileHash }),
     });
   } catch {
     // Silent fail — event logging should never break the app
