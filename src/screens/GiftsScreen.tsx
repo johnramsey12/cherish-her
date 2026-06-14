@@ -18,6 +18,10 @@ import { FilterBar, PriceRange } from '../components/gifts/FilterBar';
 import { LoadingView, EmptyState, ScreenHeader } from '../components/common/index';
 import { GiftSurvey } from '../components/surveys/GiftSurveySteps';
 import { fetchGifts, logEvent, ServerProduct } from '../services/api';
+import { useTasteProfileStore } from '../stores/useTasteProfileStore';
+import { StyleProfileSurvey } from '../components/surveys/StyleProfileSurvey';
+import type { StyleArchetype, ColorPalette } from '../types/tasteProfile';
+import { searchProducts } from '../utils/search';
 
 function serverProductToScored(p: ServerProduct): ScoredProduct {
   return {
@@ -58,6 +62,10 @@ export const GiftsScreen: React.FC = () => {
   const [surveyVisible, setSurveyVisible]         = useState(false);
   const [searchQuery, setSearchQuery]             = useState('');
   const [showSaved, setShowSaved]                 = useState(false);
+  const [selectedStyleArchetype, setSelectedStyleArchetype] = useState<StyleArchetype | undefined>(undefined);
+  const [selectedColorPalette, setSelectedColorPalette] = useState<ColorPalette | undefined>(undefined);
+  const [styleSurveyVisible, setStyleSurveyVisible] = useState(false);
+  const { styleProfileCompleted } = useTasteProfileStore();
 
   const loadProducts = useCallback(async (refreshing = false) => {
     if (refreshing) setIsRefreshing(true);
@@ -98,15 +106,16 @@ export const GiftsScreen: React.FC = () => {
     }
   }, [surveyState.giftCompleted, surveyState.profileCompleted]);
 
-  const displayProducts = products.filter(p => {
-    const q = searchQuery.toLowerCase();
-    const name = p.name.toLowerCase();
-    const brand = ((p.brand) ?? '').toLowerCase();
-    const merchant = p.merchantName.toLowerCase();
-    const matchesSearch = q === '' || name.includes(q) || brand.includes(q) || merchant.includes(q);
+  const filteredProducts = products.filter(p => {
     const matchesSaved = !showSaved || savedProducts.includes(p.id);
-    return matchesSearch && matchesSaved;
+    const matchesStyle = !selectedStyleArchetype || (p.styleTags ?? []).includes(selectedStyleArchetype as any);
+    const matchesColor = !selectedColorPalette || (p.styleTags ?? []).includes(selectedColorPalette as any);
+    return matchesSaved && matchesStyle && matchesColor;
   });
+
+  const displayProducts = searchQuery.trim() === ''
+    ? filteredProducts
+    : searchProducts(filteredProducts, searchQuery);
 
   const handleOccasionChange   = useCallback((o?: OccasionTag) => setSelectedOccasion(o), []);
   const handlePriceRangeChange = useCallback((r?: PriceRange) => setSelectedPriceRange(r), []);
@@ -168,10 +177,25 @@ export const GiftsScreen: React.FC = () => {
         selectedOccasion={selectedOccasion}
         selectedPriceRange={selectedPriceRange}
         selectedSort={sort}
+        selectedStyleArchetype={selectedStyleArchetype}
+        selectedColorPalette={selectedColorPalette}
         onOccasionChange={handleOccasionChange}
         onPriceRangeChange={handlePriceRangeChange}
         onSortChange={handleSortChange}
+        onStyleArchetypeChange={setSelectedStyleArchetype}
+        onColorPaletteChange={setSelectedColorPalette}
       />
+
+      {!styleProfileCompleted && (
+        <TouchableOpacity style={styleBannerStyles.banner} onPress={() => setStyleSurveyVisible(true)} activeOpacity={0.85}>
+          <Text style={styleBannerStyles.bannerEmoji}>✨</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styleBannerStyles.bannerTitle}>Get more tailored picks</Text>
+            <Text style={styleBannerStyles.bannerSub}>Tell us her style — takes about 90 seconds</Text>
+          </View>
+          <Text style={styleBannerStyles.bannerArrow}>›</Text>
+        </TouchableOpacity>
+      )}
 
       {displayProducts.length === 0 && !isLoading ? (
         <EmptyState
@@ -209,9 +233,35 @@ export const GiftsScreen: React.FC = () => {
         onClose={() => setSurveyVisible(false)}
         onComplete={() => { setSurveyVisible(false); loadProducts(true); }}
       />
+
+      <StyleProfileSurvey
+        visible={styleSurveyVisible}
+        onClose={() => setStyleSurveyVisible(false)}
+        onComplete={() => { setStyleSurveyVisible(false); loadProducts(true); }}
+      />
     </SafeAreaView>
   );
 };
+
+const styleBannerStyles = StyleSheet.create({
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginHorizontal: spacing.base,
+    marginTop: spacing.sm,
+    marginBottom: -spacing.xs,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.primaryMuted,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  bannerEmoji: { fontSize: 22 },
+  bannerTitle: { fontFamily: typography.fonts.bodyMedium, fontSize: typography.sizes.sm, color: colors.primary },
+  bannerSub: { fontFamily: typography.fonts.body, fontSize: typography.sizes.xs, color: colors.textSecondary, marginTop: 2 },
+  bannerArrow: { fontSize: 22, color: colors.primary },
+});
 
 const styles = StyleSheet.create({
   safe:            { flex: 1, backgroundColor: colors.background },

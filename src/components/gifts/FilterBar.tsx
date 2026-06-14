@@ -2,6 +2,8 @@ import React from 'react';
 import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { colors, spacing } from '../../constants/theme';
 import type { OccasionTag } from '../../types';
+import { STYLE_ARCHETYPES, COLOR_PALETTES } from '../../types/tasteProfile';
+import type { StyleArchetype, ColorPalette } from '../../types/tasteProfile';
 
 export interface PriceRange {
   label: string;
@@ -30,15 +32,19 @@ const OCCASIONS = [
 ];
 
 export interface FilterBarProps {
-  selectedOccasion:    OccasionTag | undefined;
-  selectedPriceRange?: PriceRange  | undefined;
-  selectedSort?:       any;
-  onOccasionChange:    (occasion: OccasionTag | undefined) => void;
-  onPriceRangeChange?: (range: PriceRange | undefined) => void;
-  onSortChange?:       (sort: any) => void;
+  selectedOccasion:        OccasionTag | undefined;
+  selectedPriceRange?:     PriceRange  | undefined;
+  selectedSort?:           any;
+  selectedStyleArchetype?: StyleArchetype | undefined;
+  selectedColorPalette?:   ColorPalette | undefined;
+  onOccasionChange:        (occasion: OccasionTag | undefined) => void;
+  onPriceRangeChange?:     (range: PriceRange | undefined) => void;
+  onSortChange?:           (sort: any) => void;
+  onStyleArchetypeChange?: (style: StyleArchetype | undefined) => void;
+  onColorPaletteChange?:   (palette: ColorPalette | undefined) => void;
 }
 
-export function FilterBar({ selectedOccasion, selectedPriceRange, onOccasionChange, onPriceRangeChange }: FilterBarProps) {
+export function FilterBar({ selectedOccasion, selectedPriceRange, selectedStyleArchetype, selectedColorPalette, onOccasionChange, onPriceRangeChange, onStyleArchetypeChange, onColorPaletteChange }: FilterBarProps) {
   return (
     <View style={styles.wrapper}>
       <View style={styles.rowHeader}>
@@ -77,6 +83,58 @@ export function FilterBar({ selectedOccasion, selectedPriceRange, onOccasionChan
           );
         })}
       </ScrollView>
+
+      {onStyleArchetypeChange && (
+        <>
+          <View style={[styles.rowHeader, { marginTop: 8 }]}>
+            <Text style={styles.rowLabel}>Style</Text>
+            {selectedStyleArchetype && (
+              <TouchableOpacity onPress={() => onStyleArchetypeChange(undefined)}>
+                <Text style={styles.clearText}>Clear</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            {STYLE_ARCHETYPES.map((opt) => {
+              const active = selectedStyleArchetype === opt.value;
+              return (
+                <TouchableOpacity key={opt.value} style={[styles.chip, active && styles.chipActive]} onPress={() => onStyleArchetypeChange(active ? undefined : opt.value)} activeOpacity={0.7}>
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt.emoji} {opt.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </>
+      )}
+
+      {onColorPaletteChange && (
+        <>
+          <View style={[styles.rowHeader, { marginTop: 8 }]}>
+            <Text style={styles.rowLabel}>Color</Text>
+            {selectedColorPalette && (
+              <TouchableOpacity onPress={() => onColorPaletteChange(undefined)}>
+                <Text style={styles.clearText}>Clear</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            {COLOR_PALETTES.map((opt) => {
+              const active = selectedColorPalette === opt.value;
+              return (
+                <TouchableOpacity key={opt.value} style={[styles.chip, active && styles.chipActive]} onPress={() => onColorPaletteChange(active ? undefined : opt.value)} activeOpacity={0.7}>
+                  <View style={styles.colorChipContent}>
+                    <View style={styles.colorSwatchPair}>
+                      <View style={[styles.colorDot, { backgroundColor: opt.swatches[0] }]} />
+                      <View style={[styles.colorDot, { backgroundColor: opt.swatches[1] }]} />
+                    </View>
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt.label}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </>
+      )}
     </View>
   );
 }
@@ -91,4 +149,7 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { color: colors.textSecondary, fontSize: 13 },
   chipTextActive: { color: colors.background, fontWeight: '500' },
+  colorChipContent: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  colorSwatchPair: { flexDirection: 'row' },
+  colorDot: { width: 10, height: 10, borderRadius: 5, marginRight: -3, borderWidth: 1, borderColor: colors.background },
 });

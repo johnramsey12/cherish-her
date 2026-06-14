@@ -169,24 +169,54 @@ function parseFile(filePath: string): RawProduct[] {
   return [];
 }
 
+// Category -> search keyword synonyms (rule-based fallback)
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  jewelry:         ['jewelry', 'accessories', 'gift for her'],
+  skincare:        ['skincare', 'beauty', 'self-care', 'gift for her'],
+  spa_wellness:    ['spa', 'wellness', 'relaxation', 'self-care gift'],
+  handbags:        ['bag', 'purse', 'accessories', 'gift for her'],
+  fashion:         ['clothing', 'style', 'apparel', 'fashion gift'],
+  tech:            ['tech', 'gadget', 'electronics', 'tech gift'],
+  books:           ['book', 'reading', 'gift for readers'],
+  fitness:         ['fitness', 'workout', 'activewear', 'gift for her'],
+  food_drink:      ['food', 'gourmet', 'treat', 'foodie gift'],
+  home_decor:      ['home decor', 'decor', 'home gift'],
+  flowers_plants:  ['flowers', 'plants', 'bouquet'],
+  personalized:    ['personalized', 'custom gift', 'monogram'],
+  experiences:     ['experience', 'activity', 'date idea'],
+};
+
 function ruleTags(name: string, desc: string, cat: string) {
   const t = `${name} ${desc} ${cat}`.toLowerCase();
+
+  // Style archetype (10-value taxonomy - see src/types/tasteProfile.ts)
   const style: string[] = [];
-  if (/luxury|premium|designer|high.end|gold|diamond/.test(t)) style.push('luxury');
-  else if (/minimalist|simple|clean|slim|sleek/.test(t)) style.push('minimalist');
-  else if (/trendy|modern|contemporary|new/.test(t)) style.push('trendy');
-  else if (/romantic|love|heart|floral|rose|pink/.test(t)) style.push('romantic');
-  else if (/sport|athletic|active|workout/.test(t)) style.push('sporty');
-  else if (/vintage|retro|antique/.test(t)) style.push('vintage');
+  if (/leather|moto|studded|punk|rock/.test(t)) style.push('edgy');
+  else if (/sequin|sparkle|glitter|rhinestone|crystal|glam|red.carpet/.test(t)) style.push('glam');
+  else if (/floral|lace|ruffle|romantic|rose|heart/.test(t)) style.push('romantic');
+  else if (/fringe|boho|bohemian|tassel|woven|macrame/.test(t)) style.push('boho');
+  else if (/minimal|simple|clean|sleek|slim/.test(t)) style.push('minimalist');
+  else if (/preppy|collegiate|polo|nautical|stripe/.test(t)) style.push('preppy');
+  else if (/sport|athletic|active|workout|performance/.test(t)) style.push('active');
+  else if (/trendy|viral|new arrival|limited edition/.test(t)) style.push('trendy');
+  else if (/eclectic|artsy|mixed print|colorful pattern/.test(t)) style.push('eclectic');
   else style.push('classic');
+
+  // Color palette (6-value taxonomy)
+  if (/black.{0,15}white|monochrome|grayscale/.test(t)) style.push('monochrome');
+  else if (/blush|pastel|baby pink|lavender|mint green/.test(t)) style.push('pastels');
+  else if (/emerald|sapphire|burgundy|jewel.tone|ruby/.test(t)) style.push('jewel_tones');
+  else if (/olive|terracotta|camel|rust|earth.tone/.test(t)) style.push('earth_tones');
+  else if (/bright|bold color|vibrant|neon|fuchsia/.test(t)) style.push('bold_bright');
+  else style.push('neutrals');
 
   const occasion: string[] = [];
   if (/birthday|bday/.test(t)) occasion.push('birthday');
   if (/anniversary/.test(t)) occasion.push('anniversary');
   if (/christmas|xmas|holiday/.test(t)) occasion.push('christmas');
-  if (/wedding|bride/.test(t)) occasion.push('wedding');
-  if (/valentine/.test(t)) occasion.push('valentines_day');
+  if (/valentine/.test(t)) occasion.push('valentines');
   if (/mother|mom/.test(t)) occasion.push('mothers_day');
+  if (/graduat/.test(t)) occasion.push('graduation');
   if (occasion.length === 0) occasion.push('birthday', 'just_because');
 
   const interest: string[] = [];
@@ -201,10 +231,11 @@ function ruleTags(name: string, desc: string, cat: string) {
   else interest.push('fashion');
 
   return {
-    styleTags: style.slice(0, 3),
+    styleTags: style.slice(0, 4),
     occasionTags: occasion.slice(0, 4),
     interestTags: interest.slice(0, 3),
     recipientTags: ['girlfriend', 'wife', 'friend', 'sister'],
+    searchKeywords: CATEGORY_KEYWORDS[cat] ?? ['gift'],
   };
 }
 
@@ -221,17 +252,26 @@ async function tagWithAI(products: Array<{ id: string; name: string; description
       max_tokens: 4096,
       messages: [{
         role: 'user',
-        content: `Tag these gift products. Only use tags from these exact lists:
-STYLE: minimalist, luxury, trendy, classic, sporty, bohemian, romantic, vintage, casual, artsy
-OCCASION: birthday, anniversary, graduation, wedding, holiday, valentines_day, mothers_day, christmas, just_because, housewarming
-INTEREST: fitness, fashion, beauty, travel, books, cooking, tech, wellness, home_decor, art
-RECIPIENT: girlfriend, wife, mother, sister, friend, daughter, grandmother, colleague, teacher
+        content: `Tag these gift products. Use ONLY tags from these exact lists.
+
+STYLE_ARCHETYPE (pick 1-2): classic, romantic, boho, edgy, glam, minimalist, preppy, active, trendy, eclectic
+COLOR_PALETTE (pick exactly 1): neutrals, earth_tones, jewel_tones, pastels, bold_bright, monochrome
+OCCASION (pick 1-3): birthday, anniversary, valentines, mothers_day, graduation, christmas, just_because
+INTEREST (pick 1-3): fitness, fashion, beauty, travel, books, cooking, tech, wellness, home_decor, art
+RECIPIENT (pick 2-4): girlfriend, wife, mother, sister, friend, daughter, grandmother, colleague, teacher
 
 PRODUCTS:
 ${list}
 
-Return ONLY a JSON array with one object per product:
-[{"style":["tag1"],"occasion":["tag1","tag2"],"interest":["tag1"],"recipient":["tag1","tag2","tag3"]}]`
+For each product, return:
+- "style": combine 1-2 STYLE_ARCHETYPE values + exactly 1 COLOR_PALETTE value into one array, e.g. ["glam","romantic","pastels"]
+- "occasion": values from OCCASION
+- "interest": values from INTEREST
+- "recipient": values from RECIPIENT
+- "searchKeywords": 8-10 lowercase search terms covering (a) what it IS - synonyms/product-type words, (b) key materials/features, (c) common gift-search phrases like "gift for her" or "self care gift". Do not repeat the exact product name.
+
+Return ONLY a JSON array, one object per product in the same order, no markdown:
+[{"style":["tag1","tag2","tag3"],"occasion":["tag1"],"interest":["tag1"],"recipient":["tag1","tag2"],"searchKeywords":["term1","term2","term3","term4"]}]`
       }],
     });
     const text = resp.content
@@ -377,10 +417,11 @@ async function main() {
       const tags = aiTags?.[j] ?? ruleTags(p.name, p.description, p.category);
       tagged.push({
         ...p,
-        styleTags: ((tags as any).style ?? (tags as any).styleTags ?? []).slice(0, 3),
+        styleTags: ((tags as any).style ?? (tags as any).styleTags ?? []).slice(0, 4),
         occasionTags: ((tags as any).occasion ?? (tags as any).occasionTags ?? []).slice(0, 4),
         interestTags: ((tags as any).interest ?? (tags as any).interestTags ?? []).slice(0, 3),
         recipientTags: ((tags as any).recipient ?? (tags as any).recipientTags ?? []).slice(0, 6),
+        searchKeywords: ((tags as any).searchKeywords ?? CATEGORY_KEYWORDS[p.category] ?? ['gift']).slice(0, 10),
       });
     }
   }
@@ -419,6 +460,7 @@ async function main() {
     occasionTags: ${JSON.stringify(p.occasionTags)} as any,
     interestTags: ${JSON.stringify(p.interestTags)},
     recipientTags: ${JSON.stringify(p.recipientTags)},
+    searchKeywords: ${JSON.stringify(p.searchKeywords)},
   }`).join(',\n');
 
   const output = [
@@ -432,6 +474,7 @@ async function main() {
     `export interface TaggedProduct extends Product {`,
     `  interestTags: string[];`,
     `  recipientTags: string[];`,
+    `  searchKeywords: string[];`,
     `}`,
     ``,
     `export const GENERATED_PRODUCTS: TaggedProduct[] = [`,
