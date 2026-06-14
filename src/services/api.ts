@@ -4,6 +4,10 @@
  * Falls back to local products if the server is unreachable.
  */
 
+import { getDeviceId } from '../utils/deviceId';
+import { computeProfileHash } from '../utils/profileHash';
+import { useTasteProfileStore } from '../stores/useTasteProfileStore';
+
 const SERVER_URL = 'https://cherish-her-server-production.up.railway.app';
 
 export interface ServerProduct {
@@ -122,10 +126,13 @@ export async function logEvent(event: {
   priceRange?: string;
 }) {
   try {
+    const deviceId = await getDeviceId();
+    const profileHash = computeProfileHash(useTasteProfileStore.getState().tasteProfile);
+
     await fetch(`${SERVER_URL}/api/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(event),
+      body: JSON.stringify({ ...event, deviceId, profileHash }),
     });
   } catch {
     // Silent fail — event logging should never break the app
