@@ -6,86 +6,86 @@
 <title>Dashboard — Cherish Her Creators</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0D0C0D;color:#FAF8F5;min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#FAF7FF;color:#1B2A4A;min-height:100vh}
 .wrap{max-width:720px;margin:0 auto;padding:32px 20px 100px}
-.logo{font-size:11px;letter-spacing:3px;color:#C8956A;text-transform:uppercase;margin-bottom:24px}
-.loading{text-align:center;padding:80px 24px;color:#9a9a9a}
+.logo{font-size:11px;letter-spacing:3px;color:#E8604A;text-transform:uppercase;margin-bottom:24px}
+.loading{text-align:center;padding:80px 24px;color:#8A7A9B}
 /* Top bar */
 .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap}
 .creator-info .cn{font-size:20px;font-weight:300}
-.creator-info .ch{font-size:13px;color:#9a9a9a;margin-top:3px}
-.code-badge{display:inline-block;background:#C8956A22;border:1px solid #C8956A44;border-radius:20px;padding:3px 14px;font-size:11px;color:#C8956A;letter-spacing:2px;margin-top:6px}
+.creator-info .ch{font-size:13px;color:#8A7A9B;margin-top:3px}
+.code-badge{display:inline-block;background:#E8604A22;border:1px solid #E8604A44;border-radius:20px;padding:3px 14px;font-size:11px;color:#E8604A;letter-spacing:2px;margin-top:6px}
 .top-actions{display:flex;gap:8px;align-items:center}
 .btn-sm{padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;border:none;font-family:inherit}
-.btn-primary{background:#C8956A;color:#0D0C0D;font-weight:600}
-.btn-outline{background:transparent;color:#9a9a9a;border:1px solid #2a2a2a}
-.btn-outline:hover{color:#FAF8F5;border-color:#555}
+.btn-primary{background:#E8604A;color:#FAF7FF;font-weight:600}
+.btn-outline{background:transparent;color:#8A7A9B;border:1px solid #E8E0F0}
+.btn-outline:hover{color:#1B2A4A;border-color:#A8A0B8}
 /* Alert banners */
 .alert{border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:13px;line-height:1.6;display:flex;align-items:center;gap:12px}
-.alert-warn{background:#2a1f00;border:1px solid #C8956A44;color:#C8956A}
-.alert-info{background:#001a2a;border:1px solid #1e4a7a;color:#7986cb}
+.alert-warn{background:#FDEEE3;border:1px solid #C0403044;color:#C04030}
+.alert-info{background:#EAEAFB;border:1px solid #A0A0D8;color:#3A3A8A}
 .alert a{color:inherit;font-weight:600}
 /* Tabs */
-.tabs{display:flex;border-bottom:1px solid #2a2a2a;margin-bottom:24px;overflow-x:auto}
-.tab{padding:10px 20px;font-size:13px;color:#9a9a9a;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .2s}
-.tab.active{color:#C8956A;border-bottom-color:#C8956A}
+.tabs{display:flex;border-bottom:1px solid #E8E0F0;margin-bottom:24px;overflow-x:auto}
+.tab{padding:10px 20px;font-size:13px;color:#8A7A9B;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .2s}
+.tab.active{color:#E8604A;border-bottom-color:#E8604A}
 .panel{display:none}.panel.active{display:block}
 /* Payout banner */
-.payout-banner{background:linear-gradient(135deg,#1a1000,#0D0C0D);border:1px solid #C8956A44;border-radius:16px;padding:24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:16px}
-.payout-amount{font-size:36px;font-weight:300;color:#C8956A}
-.payout-sub{font-size:12px;color:#9a9a9a;margin-top:4px}
+.payout-banner{background:linear-gradient(135deg,#FFF3E8,#FAF7FF);border:1px solid #E8604A44;border-radius:16px;padding:24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:16px}
+.payout-amount{font-size:36px;font-weight:300;color:#E8604A}
+.payout-sub{font-size:12px;color:#8A7A9B;margin-top:4px}
 .payout-meta{text-align:right}
 .payout-date{font-size:15px;font-weight:500}
-.payout-date-l{font-size:11px;color:#9a9a9a;margin-top:3px}
+.payout-date-l{font-size:11px;color:#8A7A9B;margin-top:3px}
 /* Stats */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-.stat{background:#161515;border:1px solid #2a2a2a;border-radius:12px;padding:16px}
-.stat-v{font-size:22px;font-weight:300;color:#C8956A}
-.stat-l{font-size:11px;color:#9a9a9a;margin-top:4px;text-transform:uppercase;letter-spacing:.8px}
+.stat{background:#FFFFFF;border:1px solid #E8E0F0;border-radius:12px;padding:16px}
+.stat-v{font-size:22px;font-weight:300;color:#E8604A}
+.stat-l{font-size:11px;color:#8A7A9B;margin-top:4px;text-transform:uppercase;letter-spacing:.8px}
 /* Cards */
-.card{background:#161515;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:16px}
-.card h3{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#9a9a9a;margin-bottom:16px}
+.card{background:#FFFFFF;border:1px solid #E8E0F0;border-radius:12px;padding:20px;margin-bottom:16px}
+.card h3{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8A7A9B;margin-bottom:16px}
 /* Month grid */
 .mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .mitem{text-align:center}
 .mv{font-size:20px;font-weight:300}
-.ml{font-size:11px;color:#9a9a9a;margin-top:4px}
+.ml{font-size:11px;color:#8A7A9B;margin-top:4px}
 /* Table */
 table{width:100%;border-collapse:collapse}
-th{font-size:11px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding-bottom:12px;border-bottom:1px solid #2a2a2a}
-td{padding:11px 0;border-bottom:1px solid #1a1a1a;font-size:13px}
+th{font-size:11px;color:#8A7A9B;text-transform:uppercase;letter-spacing:.8px;text-align:left;padding-bottom:12px;border-bottom:1px solid #E8E0F0}
+td{padding:11px 0;border-bottom:1px solid #F0EAF7;font-size:13px}
 td.right{text-align:right}
 .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px}
-.b-pending{background:#1a2f1a;color:#4caf82;border:1px solid #2d5a2d}
-.b-paid{background:#1a1a2f;color:#7986cb;border:1px solid #2d3a7a}
+.b-pending{background:#E6F5EA;color:#2D7A4E;border:1px solid #9DD4B0}
+.b-paid{background:#EAEAFB;color:#3A3A8A;border:1px solid #A0A0D8}
 /* Monthly bar chart */
 .bar-chart{display:flex;align-items:flex-end;gap:8px;height:80px;margin-bottom:8px}
 .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
-.bar{width:100%;background:#C8956A;border-radius:4px 4px 0 0;min-height:2px;transition:height .3s}
-.bar-label{font-size:10px;color:#555}
+.bar{width:100%;background:#E8604A;border-radius:4px 4px 0 0;min-height:2px;transition:height .3s}
+.bar-label{font-size:10px;color:#A8A0B8}
 /* Account form */
 .field{margin-bottom:14px}
-label{display:block;font-size:11px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
-input,select{width:100%;background:#0D0C0D;border:1px solid #2a2a2a;border-radius:10px;padding:11px 14px;color:#FAF8F5;font-size:14px;outline:none}
-input:focus,select:focus{border-color:#C8956A}
+label{display:block;font-size:11px;color:#8A7A9B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+input,select{width:100%;background:#FAF7FF;border:1px solid #E8E0F0;border-radius:10px;padding:11px 14px;color:#1B2A4A;font-size:14px;outline:none}
+input:focus,select:focus{border-color:#E8604A}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .save-row{display:flex;justify-content:flex-end;margin-top:8px}
-.btn-save{background:transparent;color:#C8956A;border:1px solid #C8956A44;border-radius:8px;padding:9px 20px;font-size:13px;cursor:pointer}
-.btn-save:hover{background:#C8956A11}
-.msg-ok{font-size:12px;color:#4caf82;margin-top:6px;display:none}
+.btn-save{background:transparent;color:#E8604A;border:1px solid #E8604A44;border-radius:8px;padding:9px 20px;font-size:13px;cursor:pointer}
+.btn-save:hover{background:#E8604A11}
+.msg-ok{font-size:12px;color:#2D7A4E;margin-top:6px;display:none}
 .msg-err{font-size:12px;color:#ef5350;margin-top:6px;display:none}
 /* Stripe setup */
-.stripe-card{background:#0D0C0D;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:12px}
+.stripe-card{background:#FAF7FF;border:1px solid #E8E0F0;border-radius:12px;padding:20px;margin-bottom:12px}
 .stripe-card h4{font-size:14px;margin-bottom:6px}
-.stripe-card p{font-size:13px;color:#9a9a9a;line-height:1.6;margin-bottom:14px}
+.stripe-card p{font-size:13px;color:#8A7A9B;line-height:1.6;margin-bottom:14px}
 .stripe-badge{display:inline-flex;align-items:center;gap:6px;background:#635BFF22;border:1px solid #635BFF44;border-radius:8px;padding:4px 12px;font-size:12px;color:#635BFF;margin-bottom:8px}
 /* Danger */
 .danger-zone{border:1px solid #ef535022;border-radius:12px;padding:20px}
 .danger-zone h3{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#ef5350;margin-bottom:12px}
-.danger-desc{font-size:13px;color:#9a9a9a;line-height:1.6;margin-bottom:14px}
+.danger-desc{font-size:13px;color:#8A7A9B;line-height:1.6;margin-bottom:14px}
 .btn-danger{background:transparent;color:#ef5350;border:1px solid #ef535033;border-radius:8px;padding:9px 20px;font-size:13px;cursor:pointer}
-.confirm-box{background:#0D0C0D;border:1px solid #2a2a2a;border-radius:10px;padding:16px;margin-top:12px;display:none}
-.confirm-box p{font-size:13px;color:#9a9a9a;margin-bottom:12px}
+.confirm-box{background:#FAF7FF;border:1px solid #E8E0F0;border-radius:10px;padding:16px;margin-top:12px;display:none}
+.confirm-box p{font-size:13px;color:#8A7A9B;margin-bottom:12px}
 .btn-row{display:flex;gap:10px;flex-wrap:wrap}
 </style>
 </head>
@@ -148,7 +148,7 @@ input:focus,select:focus{border-color:#C8956A}
         <div class="mgrid">
           <div class="mitem"><div class="mv" id="dMClicks">0</div><div class="ml">Clicks</div></div>
           <div class="mitem"><div class="mv" id="dMPurchases">0</div><div class="ml">Purchases</div></div>
-          <div class="mitem"><div class="mv" style="color:#C8956A" id="dMEarned">$0</div><div class="ml">Earned</div></div>
+          <div class="mitem"><div class="mv" style="color:#E8604A" id="dMEarned">$0</div><div class="ml">Earned</div></div>
         </div>
       </div>
 
@@ -165,7 +165,7 @@ input:focus,select:focus{border-color:#C8956A}
         <h3>Earnings History</h3>
         <table>
           <thead><tr><th>Date</th><th>Network</th><th>Sale</th><th>Your 3%</th><th>Status</th></tr></thead>
-          <tbody id="dTable"><tr><td colspan="5" style="color:#555;padding:24px 0;text-align:center">No earnings yet</td></tr></tbody>
+          <tbody id="dTable"><tr><td colspan="5" style="color:#A8A0B8;padding:24px 0;text-align:center">No earnings yet</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -205,7 +205,7 @@ input:focus,select:focus{border-color:#C8956A}
           </div>
           <div id="stripeConnected" style="display:none">
             <div class="stripe-badge">✓ Bank connected</div>
-            <p style="font-size:13px;color:#9a9a9a;margin-top:8px">Your bank account is connected. Payouts will be deposited automatically on the second Monday of each month.</p>
+            <p style="font-size:13px;color:#8A7A9B;margin-top:8px">Your bank account is connected. Payouts will be deposited automatically on the second Monday of each month.</p>
           </div>
         </div>
         <div class="field" style="margin-top:8px"><label>Backup Payout Email (PayPal)</label><input id="payEmail" type="email" placeholder="Optional"></div>
@@ -215,21 +215,21 @@ input:focus,select:focus{border-color:#C8956A}
 
       <div class="card">
         <h3>Legal</h3>
-        <p style="font-size:13px;color:#9a9a9a;line-height:1.6;margin-bottom:12px">
+        <p style="font-size:13px;color:#8A7A9B;line-height:1.6;margin-bottom:12px">
           <span id="contractStatus"></span>
           You are an independent contractor. You are responsible for all taxes on your earnings.
           The Company will issue a 1099-NEC if you earn $600+ in a calendar year.
         </p>
-        <a href="./creator-contract.html" style="font-size:13px;color:#C8956A">View / Re-sign Agreement →</a>
+        <a href="./creator-contract.html" style="font-size:13px;color:#E8604A">View / Re-sign Agreement →</a>
       </div>
 
       <div class="card">
         <h3>Your Code</h3>
-        <p style="font-size:13px;color:#9a9a9a;line-height:1.6;margin-bottom:8px">
-          Share <strong id="codeDisplay" style="color:#C8956A;letter-spacing:2px"></strong> with your audience.
+        <p style="font-size:13px;color:#8A7A9B;line-height:1.6;margin-bottom:8px">
+          Share <strong id="codeDisplay" style="color:#E8604A;letter-spacing:2px"></strong> with your audience.
           They enter it in the Cherish Her app under Settings to support you with every purchase.
         </p>
-        <p style="font-size:12px;color:#555">Commission rate: <span id="commRate">3%</span> of every purchase value</p>
+        <p style="font-size:12px;color:#A8A0B8">Commission rate: <span id="commRate">3%</span> of every purchase value</p>
       </div>
 
       <div class="danger-zone">
@@ -313,10 +313,10 @@ async function loadDashboard(code) {
   if (d.recentEarnings && d.recentEarnings.length > 0) {
     document.getElementById('dTable').innerHTML = d.recentEarnings.map(e=>`
       <tr>
-        <td style="color:#9a9a9a">${new Date(e.createdAt).toLocaleDateString()}</td>
-        <td style="color:#9a9a9a;text-transform:capitalize">${e.affiliateNetwork}</td>
+        <td style="color:#8A7A9B">${new Date(e.createdAt).toLocaleDateString()}</td>
+        <td style="color:#8A7A9B;text-transform:capitalize">${e.affiliateNetwork}</td>
         <td>${fmt(e.saleAmount)}</td>
-        <td style="color:#C8956A;font-weight:500">${fmt(e.creatorCommission)}</td>
+        <td style="color:#E8604A;font-weight:500">${fmt(e.creatorCommission)}</td>
         <td class="right"><span class="badge ${e.status==='paid'?'b-paid':'b-pending'}">${e.status}</span></td>
       </tr>`).join('');
   }
@@ -331,7 +331,7 @@ async function loadDashboard(code) {
       return `<div class="bar-wrap"><div class="bar" style="height:${h}px" title="${fmt(amt)}"></div></div>`;
     }).join('');
     document.getElementById('barLabels').innerHTML = months.map(m=>`
-      <div style="flex:1;text-align:center;font-size:10px;color:#555">${m.month.slice(5)}</div>`).join('');
+      <div style="flex:1;text-align:center;font-size:10px;color:#A8A0B8">${m.month.slice(5)}</div>`).join('');
   }
 
   document.getElementById('loading').style.display='none';

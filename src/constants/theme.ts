@@ -1,37 +1,37 @@
 import { Platform } from 'react-native';
 
 // ─────────────────────────────────────────────
-//  COLOR PALETTE  — Luxury Dark Romance
+//  COLOR PALETTE  — Light Romance
 // ─────────────────────────────────────────────
 export const colors = {
   // Backgrounds
-  background: '#0D0C0D',
-  backgroundSecondary: '#141214',
-  surface: '#1C1A1C',
-  surfaceElevated: '#252225',
-  surfaceHigh: '#2E2B2E',
+  background: '#FAF7FF',
+  backgroundSecondary: '#FAF7FF',
+  surface: '#FFFFFF',
+  surfaceElevated: '#FFFFFF',
+  surfaceHigh: '#FFFFFF',
 
-  // Primary — Rose Gold
-  primary: '#C8956A',
-  primaryLight: '#E0B48E',
-  primaryDark: '#A0724A',
-  primaryMuted: 'rgba(200, 149, 106, 0.15)',
+  // Primary — Coral
+  primary: '#E8604A',
+  primaryLight: '#F07A65',
+  primaryDark: '#C04030',
+  primaryMuted: 'rgba(232, 96, 74, 0.12)',
 
-  // Rose accent
-  rose: '#8B3A52',
-  roseLight: '#B05570',
-  roseDark: '#6B2A3A',
-  roseMuted: 'rgba(139, 58, 82, 0.15)',
+  // Rose accent — Purple
+  rose: '#7C4FA0',
+  roseLight: '#9B6FBF',
+  roseDark: '#5A3A80',
+  roseMuted: 'rgba(124, 79, 160, 0.12)',
 
   // Gold fleck
-  gold: '#D4AF6B',
-  goldLight: '#E8CC92',
+  gold: '#F0A500',
+  goldLight: '#F5C050',
 
   // Text
-  textPrimary: '#FAF8F5',
-  textSecondary: '#A89E98',
-  textTertiary: '#6E6469',
-  textInverse: '#0D0C0D',
+  textPrimary: '#1B2A4A',
+  textSecondary: '#8A7A9B',
+  textTertiary: '#A8A0B8',
+  textInverse: '#FAF7FF',
 
   // Utility
   success: '#5DBB7A',
@@ -42,28 +42,28 @@ export const colors = {
   errorMuted: 'rgba(208, 85, 85, 0.15)',
 
   // Borders
-  border: '#2C282C',
-  borderLight: '#3A363A',
-  borderFocus: '#C8956A',
+  border: '#E8E0F0',
+  borderLight: '#F0EAF7',
+  borderFocus: '#E8604A',
 
   // Tab bar
-  tabBar: '#111011',
-  tabBarBorder: '#1E1C1E',
-  tabActive: '#C8956A',
-  tabInactive: '#5C5459',
+  tabBar: '#FFFFFF',
+  tabBarBorder: '#E8E0F0',
+  tabActive: '#E8604A',
+  tabInactive: '#8A7A9B',
 
   // Cards
-  cardBackground: '#1C1A1C',
-  cardBorder: 'rgba(200, 149, 106, 0.12)',
+  cardBackground: '#FFFFFF',
+  cardBorder: 'rgba(232, 96, 74, 0.12)',
 
   // Overlays
-  overlay: 'rgba(0, 0, 0, 0.75)',
-  overlayLight: 'rgba(0, 0, 0, 0.45)',
+  overlay: 'rgba(27, 42, 74, 0.75)',
+  overlayLight: 'rgba(27, 42, 74, 0.45)',
 
   // Discovery tags
   discoveryTrending: '#E5A84A',
   discoveryHidden: '#5DBB7A',
-  discoveryLuxury: '#D4AF6B',
+  discoveryLuxury: '#F0A500',
   discoveryBudget: '#6AB4D4',
   discoverySeasonal: '#C87FD0',
 };
@@ -142,36 +142,36 @@ export const radius = {
 export const shadows = {
   sm: Platform.select({
     ios: {
-      shadowColor: '#000',
+      shadowColor: '#1B2A4A',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.25,
+      shadowOpacity: 0.08,
       shadowRadius: 4,
     },
     android: { elevation: 2 },
   }),
   md: Platform.select({
     ios: {
-      shadowColor: '#000',
+      shadowColor: '#1B2A4A',
       shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.35,
+      shadowOpacity: 0.1,
       shadowRadius: 8,
     },
     android: { elevation: 4 },
   }),
   lg: Platform.select({
     ios: {
-      shadowColor: '#000',
+      shadowColor: '#1B2A4A',
       shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.45,
+      shadowOpacity: 0.12,
       shadowRadius: 16,
     },
     android: { elevation: 8 },
   }),
   gold: Platform.select({
     ios: {
-      shadowColor: '#C8956A',
+      shadowColor: '#E8604A',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
+      shadowOpacity: 0.12,
       shadowRadius: 8,
     },
     android: { elevation: 4 },
@@ -182,12 +182,12 @@ export const shadows = {
 //  GRADIENTS (arrays for use with LinearGradient if needed)
 // ─────────────────────────────────────────────
 export const gradients = {
-  primary: ['#C8956A', '#A0724A'],
-  rose: ['#8B3A52', '#6B2A3A'],
-  surface: ['#1C1A1C', '#141214'],
-  gold: ['#D4AF6B', '#C8956A'],
-  dark: ['#0D0C0D', '#1C1A1C'],
-  heroOverlay: ['rgba(13,12,13,0)', 'rgba(13,12,13,0.75)', 'rgba(13,12,13,0.98)'],
+  primary: ['#E8604A', '#C04030'],
+  rose: ['#7C4FA0', '#5A3A80'],
+  surface: ['#FFFFFF', '#FAF7FF'],
+  gold: ['#F5C050', '#F0A500'],
+  dark: ['#1B2A4A', '#2E4070'],
+  heroOverlay: ['rgba(27,42,74,0)', 'rgba(27,42,74,0.75)', 'rgba(27,42,74,0.98)'],
 };
 
 // ─────────────────────────────────────────────
